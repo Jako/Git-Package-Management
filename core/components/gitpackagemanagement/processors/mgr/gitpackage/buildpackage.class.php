@@ -101,21 +101,36 @@ class GitPackageManagementBuildPackageProcessor extends modObjectProcessor {
             $vehicle->addCoreResolver($this->corePath);
         }
 
+        $fileResolvers = $resolver->getFileResolvers();
+        foreach ($fileResolvers as $fileResolver) {
+            $source = $fileResolver['source'];
+
+            $source = str_replace('[[+corePath]]', $this->corePath, $source);
+            $source = str_replace('[[+assetsPath]]', $this->assetsPath, $source);
+            $source = str_replace('[[+packagePath]]', $this->packagePath, $source);
+
+            $vehicle->addFileResolver($source, $fileResolver['target']);
+        }
+
         $db = $this->config->getDatabase();
         if ($db != null) {
             $tables = $db->getTables();
             if (!empty($tables)) {
-                $vehicle->addTableResolver($this->packagePath . '_build/gpm_resolvers', $tables);
+                $vehicle->addTableResolver($this->packagePath . '_build/gpm_resolvers', $db);
             }
         }
 
         $extensionPackage = $this->config->getExtensionPackage();
         if ($extensionPackage !== false) {
-            if ($extensionPackage === true) {
-                $vehicle->addExtensionPackageResolver($this->packagePath . '_build/gpm_resolvers');
-            } else {
-                $vehicle->addExtensionPackageResolver($this->packagePath . '_build/gpm_resolvers', $extensionPackage['serviceName'], $extensionPackage['serviceClass']);
+            $prefix = $db->getPrefix();
+
+            if (!is_array($extensionPackage)) $extensionPackage = array();
+            
+            if (isset($prefix)) {
+                $extensionPackage['tablePrefix'] = $prefix;
             }
+
+            $vehicle->addExtensionPackageResolver($this->packagePath . '_build/gpm_resolvers', $extensionPackage);
         }
 
         if (!empty($this->tvMap)) {
@@ -133,6 +148,7 @@ class GitPackageManagementBuildPackageProcessor extends modObjectProcessor {
             $vehicle->addResourceResolver($this->packagePath . '_build/gpm_resolvers', $resourcesArray);
         }
 
+        $this->addWidgets();
         $this->addSystemSettings();
 
         $after = $resolver->getAfter();
@@ -166,6 +182,14 @@ class GitPackageManagementBuildPackageProcessor extends modObjectProcessor {
             if (file_exists($file)) {
                 $setupOptions['source'] = $file;
                 $packageAttributes['setup-options'] = $setupOptions;
+            }
+        }
+
+        $dependencies = $this->config->getDependencies();
+        if (!empty($dependencies)) {
+            $packageAttributes['requires'] = array();
+            foreach ($dependencies as $dependency) {
+                $packageAttributes['requires'][$dependency['name']] = $dependency['version'];
             }
         }
 
@@ -356,6 +380,7 @@ class GitPackageManagementBuildPackageProcessor extends modObjectProcessor {
                 $tvObject->set('elements', $configTV->getInputOptionValues());
                 $tvObject->set('rank', $configTV->getSortOrder());
                 $tvObject->set('default_text', $configTV->getDefaultValue());
+                $tvObject->set('display', $configTV->getDisplay());
 
                 $inputProperties = $configTV->getInputProperties();
                 if (!empty($inputProperties)) {
@@ -364,7 +389,7 @@ class GitPackageManagementBuildPackageProcessor extends modObjectProcessor {
 
                 $outputProperties = $configTV->getOutputProperties();
                 if (!empty($outputProperties)) {
-                    $tvObject->set('output_properties',$outputProperties[0]);
+                    $tvObject->set('output_properties',$outputProperties);
                 }
 
                 $tvObject->setProperties($configTV->getProperties());
@@ -428,6 +453,7 @@ class GitPackageManagementBuildPackageProcessor extends modObjectProcessor {
                 'menuindex' => $menu->getMenuIndex(),
                 'params' => $menu->getParams(),
                 'handler' => $menu->getHandler(),
+                'permissions' => $menu->getPermissions(),
             ),'',true,true);
 
             $configAction = $menu->getActionObject();
@@ -470,6 +496,30 @@ class GitPackageManagementBuildPackageProcessor extends modObjectProcessor {
             ), '', true, true);
 
             $vehicle = $this->builder->createVehicle($settingObject, 'setting');
+            $this->builder->putVehicle($vehicle);
+        }
+    }
+
+    private function addWidgets() {
+        /** @var GitPackageConfigElementWidget[] $widgets */
+        $widgets = $this->config->getElements('widgets');
+
+        foreach ($widgets as $widget) {
+            /** @var modSystemSetting $widgetObject */
+            $widgetObject = $this->modx->newObject('modDashboardWidget');
+            $widgetObject->fromArray(array(
+                'name' => $widget->getName(),
+                'description' => $widget->getDescription(),
+                'type' => $widget->getWidgetType(),
+                'content' => ($widget->getWidgetType() == 'file') ?
+                    '[[++core_path]]' . 'components/' . $this->config->getLowCaseName() . '/' . $widget->getFilePath() :
+                    $widget->getFile(),
+                'namespace' => $this->config->getLowCaseName(),
+                'lexicon' => $widget->getLexicon(),
+                'size' => $widget->getSize(),
+            ), '', true, true);
+
+            $vehicle = $this->builder->createVehicle($widgetObject, 'widget');
             $this->builder->putVehicle($vehicle);
         }
     }

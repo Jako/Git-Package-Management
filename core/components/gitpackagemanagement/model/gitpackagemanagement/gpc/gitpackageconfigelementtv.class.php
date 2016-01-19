@@ -8,6 +8,8 @@ class GitPackageConfigElementTV extends GitPackageConfigElement{
     protected $inputType = 'text';
     protected $sortOrder = '0';
     protected $templates = array();
+    protected $category;
+    protected $display = '';
     private $inputProperties = array();
     private $outputProperties = array();
 
@@ -33,6 +35,15 @@ class GitPackageConfigElementTV extends GitPackageConfigElement{
             $this->name = strtolower($this->caption);
         }
 
+        if (isset($config['description'])) {
+            $this->description = $config['description'];
+        }
+
+        if (isset($config['properties']) && is_array($config['properties'])) {
+            $propertiesSet = $this->setProperties($config['properties']);
+            if ($propertiesSet === false) return false;
+        }
+
         if(isset($config['type'])){
             $this->inputType = $config['type'];
         }
@@ -48,6 +59,10 @@ class GitPackageConfigElementTV extends GitPackageConfigElement{
         if(isset($config['sortOrder'])){
             $this->sortOrder = $config['sortOrder'];
         }
+        
+        if(isset($config['display'])){
+            $this->display = $config['display'];
+        }
 
         if(isset($config['templates'])){
             if(is_array($config['templates'])){
@@ -56,6 +71,16 @@ class GitPackageConfigElementTV extends GitPackageConfigElement{
                 $this->config->error->addError('Elements: ' . $this->type . ' - templates are not an array', true);
                 return false;
             }
+        }
+
+        if (isset($config['category'])) {
+            $currentCategories = array_keys($this->config->getCategories());
+            if (!in_array($config['category'], $currentCategories)) {
+                $this->config->error->addError('Elements: ' . $this->type . ' - category: ' . $config['category'] . ' does not exist', true);
+                return false;
+            }
+
+            $this->category = $config['category'];
         }
 
         return true;
@@ -111,4 +136,16 @@ class GitPackageConfigElementTV extends GitPackageConfigElement{
         return $this->outputProperties;
     }
 
+    /**
+     * @return string
+     */
+    public function getCategory()
+    {
+        return $this->category;
+    }
+
+    public function getDisplay()
+    {
+        return $this->display;
+    }
 }

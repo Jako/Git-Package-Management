@@ -32,6 +32,7 @@ class GitPackageConfigResource {
     private $hide_children_in_tree = 0;
     private $show_in_tree = 1;
     private $setAsHome = 0;
+    private $link_attributes = '';
 
     public function __construct(modX &$modx, $gitPackageConfig) {
         $this->modx =& $modx;
@@ -49,8 +50,7 @@ class GitPackageConfigResource {
         if (isset($config['alias'])) {
             $this->alias = $config['alias'];
         } else {
-            $res = new modResource($this->modx);
-            $this->alias = $res->cleanAlias($this->pagetitle);
+            $this->alias = modResource::filterPathSegment($this->modx, $this->pagetitle);
         }
 
         if (isset($config['setAsHome'])) {
@@ -136,6 +136,10 @@ class GitPackageConfigResource {
         if (isset($config['show_in_tree'])) {
             $this->show_in_tree = intval($config['show_in_tree']);
         }
+        
+        if (isset($config['link_attributes'])) {
+            $this->link_attributes = $config['link_attributes'];
+        }
 
         if (isset($config['tvs']) && is_array($config['tvs'])) {
             foreach ($config['tvs'] as $tv) {
@@ -163,11 +167,11 @@ class GitPackageConfigResource {
 
         if (isset($config['others']) && is_array($config['others'])) {
             foreach ($config['others'] as $other) {
-                if (!isset($tv['name'])) {
+                if (!isset($other['name'])) {
                     $this->config->error->addError('Resources - Other - name is not set', true);
                     return false;
                 }
-
+                
                 if (!isset($other['value'])) {
                     $other['value'] = '';
                 }
@@ -248,6 +252,7 @@ class GitPackageConfigResource {
         $resource['menutitle'] = $this->menutitle;
         $resource['hide_children_in_tree'] = $this->hide_children_in_tree;
         $resource['show_in_tree'] = $this->show_in_tree;
+        $resource['link_attributes'] = $this->link_attributes;
 
         if ($this->setAsHome == 1) {
             $id = $this->modx->getOption('site_start');
@@ -273,7 +278,33 @@ class GitPackageConfigResource {
             $resource['id'] = $this->id;
         }
 
+        $taggerCorePath = $this->modx->getOption('tagger.core_path', null, $this->modx->getOption('core_path', null, MODX_CORE_PATH) . 'components/tagger/');
+        if (file_exists($taggerCorePath . 'model/tagger/tagger.class.php')) {
+            /** @var Tagger $tagger */
+            $tagger = $this->modx->getService(
+                'tagger',
+                'Tagger',
+                $taggerCorePath . 'model/tagger/',
+                array(
+                    'core_path' => $taggerCorePath
+                )
+            );
+            
+            $tagger = $tagger instanceof Tagger;
+        } else {
+            $tagger = null;
+        }
+
         foreach ($this->others as $other) {
+            if (($tagger == true) && (strpos($other['name'], 'tagger-') !== false)) {
+                $groupAlias = preg_replace('/tagger-/', '', $other['name'], 1);
+
+                $group = $this->modx->getObject('TaggerGroup', array('alias' => $groupAlias));
+                if ($group) {
+                    $other['name'] = 'tagger-' . $group->id;
+                }
+            }
+            
             $resource[$other['name']] = $other['value'];
         }
 
@@ -343,15 +374,13 @@ class GitPackageConfigResource {
         $resource['show_in_tree'] = $this->show_in_tree;
         $resource['set_as_home'] = $this->setAsHome;
         $resource['tvs'] = $this->tvs;
-
-        foreach ($this->others as $other) {
-            $resource[$other['name']] = $other['value'];
-        }
+        $resource['others'] = $this->others;
+        $resource['link_attributes'] = $this->link_attributes;
 
         $resource['template'] = $this->template;
 
         if ($this->content_type !== null) {
-                $resource['content_type'] = $this->content_type;
+            $resource['content_type'] = $this->content_type;
         }
 
         if ($this->published !== null) {

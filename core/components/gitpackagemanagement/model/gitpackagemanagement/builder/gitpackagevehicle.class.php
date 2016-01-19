@@ -16,18 +16,18 @@ class GitPackageVehicle {
     }
 
     public function addAssetsResolver($assetsPath){
-        $this->vehicle->resolve('file',array(
-            'source' => $assetsPath,
-            'target' => "return MODX_ASSETS_PATH . 'components/';",
-        ));
-
-        return $this;
+        return $this->addFileResolver($assetsPath, "return MODX_ASSETS_PATH . 'components/';");
     }
 
     public function addCoreResolver($corePath) {
+        return $this->addFileResolver($corePath, "return MODX_CORE_PATH . 'components/';");
+    }
+
+    public function addFileResolver($source, $target)
+    {
         $this->vehicle->resolve('file',array(
-            'source' => $corePath,
-            'target' => "return MODX_CORE_PATH . 'components/';",
+            'source' => $source,
+            'target' => $target,
         ));
 
         return $this;
@@ -41,7 +41,7 @@ class GitPackageVehicle {
         return $this;
     }
 
-    public function addTableResolver($packagePath, $tables) {
+    public function addTableResolver($packagePath, GitPackageConfigDatabase $db) {
         if (!is_dir($packagePath)) {
             mkdir($packagePath);
         }
@@ -51,7 +51,9 @@ class GitPackageVehicle {
             unlink($resolver);
         }
 
-        $this->smarty->assign('tables', $tables);
+        $this->smarty->assign('tables', $db->getTables());
+        $this->smarty->assign('prefix', $db->getPrefix());
+        $this->smarty->assign('simpleobjects', $db->getSimpleObjects());
 
         $resolverContent = $this->smarty->fetch('tables_resolver.tpl');
 
@@ -64,7 +66,7 @@ class GitPackageVehicle {
         return $this->vehicle;
     }
 
-    public function addExtensionPackageResolver($packagePath, $serviceName = null, $serviceClass = null) {
+    public function addExtensionPackageResolver($packagePath, $options = array()) {
         if (!is_dir($packagePath)) {
             mkdir($packagePath);
         }
@@ -74,8 +76,7 @@ class GitPackageVehicle {
             unlink($resolver);
         }
 
-        $this->smarty->assign('serviceName', $serviceName);
-        $this->smarty->assign('serviceClass', $serviceClass);
+        $this->smarty->assign('extension_package_options', var_export($options, true));
 
         $resolverContent = $this->smarty->fetch('extension_package_resolver.tpl');
 

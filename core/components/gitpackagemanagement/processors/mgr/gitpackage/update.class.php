@@ -41,6 +41,10 @@ class GitPackageManagementUpdatePackageProcessor extends modObjectUpdateProcesso
         $config = file_get_contents($configFile);
 
         $config = $this->modx->fromJSON($config);
+        
+        if (is_null($config)) {
+            return 'JSON config file is not valid.';
+        }
 
         $this->newConfig = new GitPackageConfig($this->modx, $packagePath);
         $this->newConfig->parseConfig($config);
@@ -124,7 +128,7 @@ class GitPackageManagementUpdatePackageProcessor extends modObjectUpdateProcesso
 
         foreach ($this->oldConfig->getMenus() as $menu) {
             $menuObject = $this->modx->getObject('modMenu', array ('text' => $menu->getText()));
-            $menuObject->remove();
+            if ($menuObject) $menuObject->remove();
         }
 
         $actions = array();
@@ -163,6 +167,7 @@ class GitPackageManagementUpdatePackageProcessor extends modObjectUpdateProcesso
                                            'menuindex' => $men->getMenuIndex(),
                                            'params' => $men->getParams(),
                                            'handler' => $men->getHandler(),
+                                           'permissions' => $men->getPermissions(),
                                       ),'',true,true);
 
                 if (isset($actions[$men->getAction()])) {
@@ -188,14 +193,17 @@ class GitPackageManagementUpdatePackageProcessor extends modObjectUpdateProcesso
         if($extPackage !== false){
             $modelPath = $this->packagePath . $this->object->dir_name . "/core/components/" . $this->newConfig->getLowCaseName() . "/" . 'model/';
             $modelPath = str_replace('\\', '/', $modelPath);
-            if($extPackage === true){
-                $this->modx->addExtensionPackage($this->newConfig->getLowCaseName(),$modelPath);
-            }else{
-                $this->modx->addExtensionPackage($this->newConfig->getLowCaseName(),$modelPath, array(
-                      'serviceName' => $extPackage['serviceName'],
-                      'serviceClass' => $extPackage['serviceClass']
-                 ));
+
+            $db = $this->newConfig->getDatabase();
+            $prefix = $db->getPrefix();
+
+            if (!is_array($extPackage)) $extPackage = array();
+            
+            if (isset($prefix)) {
+                $extPackage['tablePrefix'] = $prefix;
             }
+
+            $this->modx->addExtensionPackage($this->newConfig->getLowCaseName(), $modelPath, $extPackage);
         }
     }
 
@@ -245,6 +253,7 @@ class GitPackageManagementUpdatePackageProcessor extends modObjectUpdateProcesso
         $this->updateElement('Template');
         $this->updateElement('Plugin');
         $this->updateTV();
+        $this->updateWidget();
     }
 
     private function updateElement($type) {
@@ -255,7 +264,7 @@ class GitPackageManagementUpdatePackageProcessor extends modObjectUpdateProcesso
         foreach($this->newConfig->getElements($configType) as $name => $element){
             if($type == 'Template'){
                 /** @var modElement $elementObject */
-                $elementObject = $this->modx->getObject('mod'.$type, array('templatename' => $name));                
+                $elementObject = $this->modx->getObject('mod'.$type, array('templatename' => $name));
             }else{
                 $elementObject = $this->modx->getObject('mod'.$type, array('name' => $name));
             }
@@ -376,7 +385,8 @@ class GitPackageManagementUpdatePackageProcessor extends modObjectUpdateProcesso
             $tvObject->set('elements', $tv->getInputOptionValues());
             $tvObject->set('rank', $tv->getSortOrder());
             $tvObject->set('default_text', $tv->getDefaultValue());
-
+            $tvObject->set('display', $tv->getDisplay());
+            
             $inputProperties = $tv->getInputProperties();
             if (!empty($inputProperties)) {
                 $tvObject->set('input_properties',$inputProperties);
@@ -384,7 +394,7 @@ class GitPackageManagementUpdatePackageProcessor extends modObjectUpdateProcesso
 
             $outputProperties = $tv->getOutputProperties();
             if (!empty($outputProperties)) {
-                $tvObject->set('output_properties',$outputProperties[0]);
+                $tvObject->set('output_properties',$outputProperties);
             }
 
             /** @var modTemplateVarTemplate[] $oldTemplates */
@@ -416,6 +426,51 @@ class GitPackageManagementUpdatePackageProcessor extends modObjectUpdateProcesso
 
             if ($tv) {
                 $tv->remove();
+            }
+        }
+
+        return true;
+    }
+
+    private function updateWidget() {
+        $notUsedElements = array_keys($this->oldConfig->getElements('widgets'));
+        $notUsedElements = array_flip($notUsedElements);
+
+        /** @var GitPackageConfigElementWidget $widget */
+        foreach($this->newConfig->getElements('widgets') as $name => $widget){
+            /** @var modDashboardWidget $widgetObject */
+            $widgetObject = $this->modx->getObject('modDashboardWidget', array('name' => $name));
+
+            if (!$widgetObject){
+                $widgetObject = $this->modx->newObject('modDashboardWidget');
+                $widgetObject->set('name', $widget->getName());
+            }
+
+            $widgetObject->set('description', $widget->getDescription());
+            $widgetObject->set('type', $widget->getWidgetType());
+            if ($widget->getWidgetType() == 'file') {
+                $widgetContent = $widget->getPackagePath() . '/core/components/' . $this->newConfig->getLowCaseName() .'/'. $widget->getFilePath();
+            } else {
+                $widgetContent = $widget->getFile();
+            }
+            $widgetObject->set('content', $widgetContent);
+            $widgetObject->set('namespace', $this->newConfig->getLowCaseName());
+            $widgetObject->set('lexicon', $widget->getLexicon());
+            $widgetObject->set('size', $widget->getSize());
+
+            $widgetObject->save();
+
+            if(isset($notUsedElements[$name])){
+                unset($notUsedElements[$name]);
+            }
+        }
+
+        foreach($notUsedElements as $name => $value){
+            /** @var modDashboardWidget $widget */
+            $widget = $this->modx->getObject('modDashboardWidget', array('name' => $name));
+
+            if ($widget) {
+                $widget->remove();
             }
         }
 

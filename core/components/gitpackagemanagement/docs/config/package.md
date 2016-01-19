@@ -108,6 +108,7 @@ In this section we create some elements. During the installation, all elements a
 
 #### Available properties:
 - **name** (required) - Chunk's name
+- **category** (optional) - Name of category defined in **categories** element
 - **file** (optional, default: strtolower($name$).chunk.tpl) - Chunk's filename with extension
 - **properties** (optional) - An array of objects, where each object has those properties:
      - **name** (required) - Name of the property
@@ -151,6 +152,7 @@ In this section we create some elements. During the installation, all elements a
 
 #### Available properties:
 - **name** (required) - Snippet's name
+- **category** (optional) - Name of category defined in **categories** element
 - **file** (optional, default: strtolower($name$).snippet.php) - Snippet's filename with extension
 - **properties** (optional) - An array of objects, where each object has those properties:
     - **name** (required) - Name of the property
@@ -194,6 +196,7 @@ In this section we create some elements. During the installation, all elements a
 
 #### Available properties:
 - **name** (required) - Template's name
+- **category** (optional) - Name of category defined in **categories** element
 - **file** (optional, default: strtolower($name$).template.tpl) - Template's filename with extension
 - **properties** (optional) - An array of objects, where each object has those properties:
     - **name** (required) - Name of the property
@@ -239,6 +242,7 @@ In this section we create some elements. During the installation, all elements a
 
 #### Available properties:
 - **name** (required) - Plugin's name
+- **category** (optional) - Name of category defined in **categories** element
 - **file** (optional, default: strtolower($name$).plugin.php) - Plugin's filename with extension
 - **events** (required) - Array of events
 - **properties** (optional) - An array of objects, where each object has those properties:
@@ -285,12 +289,14 @@ In this section we create some elements. During the installation, all elements a
 #### Available properties:
 - **caption** (required) - TV's caption
 - **name** (optional, default: strtolower($caption$)) - TV's name
+- **category** (optional) - Name of category defined in **categories** element
 - **type** (optional, default: text) - TV's type
 - **description** (optional, default: null) - TV's description
 - **defaultValue** (optional, default: null) - Default value of the TV
 - **inputOptionValues** (optional, default: null) - Input options, for example items for single select list
 - **sortOrder** (optional, default: 0) - If you're using more than one TV, this will determine which appear at the top (1 = top, bigger numbers sink to the bottom)
-- **templates** (required) - Array of template names for which will be this TV allowed
+- **templates** (optional) - Array of template names for which will be this TV allowed
+- **display** (optional) - Output type
 - **properties** (optional) - An array of objects, where each object has those properties:
     - **name** (required) - Name of the property
     - **description** (optional) - Description of the property
@@ -300,7 +306,7 @@ In this section we create some elements. During the installation, all elements a
     - **lexicon** (optional, default:strtolower($lowCaseName$):properties) - Lexicon topic for description
     - **area** (optional) - Area of the property
 - **inputProperties** (optional) - Object with input properties, list of available properties depends on TV type
-- **outputProperties** (optional) - Object with output properties, list of available properties depends on output type (e.g. `delimiter`; `format`; `tagname`, `tagid`, `class`, `style`, `attrib`; ...)
+- **outputProperties** (optional) - Object with output properties, list of available properties depends on `display` (e.g. `delimiter`; `format`; `tagname`, `tagid`, `class`, `style`, `attrib`; ...)
 
 #### Example
 ```json
@@ -319,12 +325,92 @@ In this section we create some elements. During the installation, all elements a
                     "name": "testproperty",
                     "value": "testvalue"
                 }],
-                "inputProperties": [{
+                "inputProperties": {
                     "allowBlank": false
-                }],
-                "outputProperties": [{
+                },
+                "outputProperties": {
                     "delimiter": ","
-                }]                
+                }               
+            }]
+        }
+    }
+}
+```
+
+### Widgets
+
+**Wrapper:** widgets (array)
+```json
+{
+    "package":{
+        "elements": {
+            "widgets": []
+        }
+    }
+}
+```
+
+lexicon, size
+
+#### Available properties:
+- **name** (required) - Widget title
+- **description** (optional, default: null) - Widget description
+- **type** (optional, default: file) - Widget type. Could be set to: 
+    - `snippet` widgets are MODX Snippets that are run and return their output. content has to be filled with a snippet name. 
+    - `html` widgets are just straight HTML. content has to be filled with HTML code.
+    - `file` widgets are loaded directly from PHP files, which can either return their output or the name of the modDashboardWidgetClass-extended class to load. content has to be filled with the name of a PHP file.
+    - `php` widgets are widgets that are straight PHP in the widget content, similar to a Snippet. content has to be filled with the PHP code (with or without PHP tags).
+- **content** (optional, default: null or strtolower($name$).widget.php for file type) - Widget content
+- **lexicon** (optional, default: strtolower($name$):default) - Widget lexicon
+- **size** (optional, default: half) - Widget size. Could be set to `half`, `full`, `double`
+
+#### Example
+```json
+{
+    "package":{
+        "elements": {
+            "widgets": [{
+                "name": "MyWidget",
+                "description": "This is the best widget",
+                "type": "file",
+                "content": "mywidget.widget.php",
+                "lexicon": "mywidget:default",
+                "size": "half",
+            }]
+        }
+    }
+}
+```
+
+
+### Categories
+Category with name of the package is created automatically and all categories defined here will be nested under it.
+
+**Wrapper:** categories (array)
+```json
+{
+    "package":{
+        "elements": {
+            "categories": []
+        }
+    }
+}
+```
+
+#### Available properties:
+- **name** (required) - Category's name
+- **parent** (optional) - Name of category that will be used as a parent
+
+#### Example
+```json
+{
+    "package":{
+        "elements": {
+            "categories": [{
+                "name": "First category"
+            },{
+                "name": "Second category",
+                "parent": "First category"
             }]
         }
     }
@@ -357,6 +443,7 @@ Here you can specify Resources that should be created. Note that this is only on
 - **template** (optional) - Template name or 0
 - **class_key** (optional) - Class key of Resource. Default: modDocument
 - **content_type** (optional) - Name of the content type that will be used for Resource
+- **link_attributes** (optional) - Link attributes of the Resource
 - **published** (optional) - 1/0 to set Resource published or not
 - **isfolder** (optional) - 1/0 to set Resource as folder
 - **richtext** (optional) - 1/0 to allow RichText editor

@@ -1,6 +1,6 @@
 site_name: Git Package Management
 docs_dir: core/components/gitpackagemanagement/docs
-site_dir: core/components/gitpackagemanagement/site
+site_dir: _build/site
 repo_url: https://github.com/TheBoxer/Git-Package-Management
 pages:
 - [index.md, Home]
@@ -11,6 +11,7 @@ pages:
 - [config/package.md, Config, Package]
 - [config/database.md, Config, Database]
 - [config/extension-package.md, Config, Extension package]
+- [config/dependencies.md, Config, Dependencies]
 - [config/build.md, Config, Build]
 - [config/examples.md, Config, Examples]
 theme: readthedocs
