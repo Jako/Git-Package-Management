@@ -29,7 +29,6 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 "return array('repo' => 'Main',\n" .
                 "    'name' => '{$this->config->getLowCaseName()}',\n" .
                 "    'displayName' => '{$this->config->getName()}',\n" .
-                "    'version' => \$pp->getLatestVersion('{$this->config->getLowCaseName()}'),\n" .
                 "    'dir' => '_packages',\n" .
                 "    'description' => '{$this->config->getDescription()}',\n" .
                 "    'author' => '{$this->config->getAuthor()}',\n" .
