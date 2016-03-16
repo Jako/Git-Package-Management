@@ -28,7 +28,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             fwrite($info_file, "<?php\n" .
                 "return array('repo' => 'Main',\n" .
                 "    'name' => '{$this->config->getLowCaseName()}',\n" .
-                "    'displayName' => '{$this->config->getName()}',\n" .
+                "    'displayname' => '{$this->config->getName()}',\n" .
                 "    'dir' => '_packages',\n" .
                 "    'description' => '{$this->config->getDescription()}',\n" .
                 "    'author' => '{$this->config->getAuthor()}',\n" .
