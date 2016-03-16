@@ -5,6 +5,8 @@
  * @package gitpackagemanagement
  * @subpackage controllers
  */
+require_once dirname(dirname(__FILE__)) . '/index.class.php';
+
 class GitPackageManagementHomeManagerController extends GitPackageManagementBaseManagerController {
     public function process(array $scriptProperties = array()) {
 
