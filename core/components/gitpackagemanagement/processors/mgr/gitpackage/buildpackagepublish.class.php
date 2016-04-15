@@ -18,22 +18,22 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         };
 
         $source = $this->config->getPackagePath() . '/_packages/' . $this->builder->getTPBuilder()->getSignature() . '.transport.zip';
-        $target = MODX_BASE_PATH . 'extras/_packages/' . $this->builder->getTPBuilder()->getSignature() . '.transport.zip';
+        $targetPath = realpath(MODX_BASE_PATH . 'extras/');
+        $target = $targetPath . '/_packages/' . $this->builder->getTPBuilder()->getSignature() . '.transport.zip';
         copy($source, $target);
         chmod($target, 0666);
 
-        $package_info = MODX_BASE_PATH . 'extras/_packages/' . $this->builder->getTPBuilder()->package->name . '.info.php';
+        $package_info = $targetPath . '/_packages/' . $this->builder->getTPBuilder()->package->name . '.info.php';
         if (!file_exists($package_info)) {
             $info_file = fopen($package_info, 'w');
             fwrite($info_file, "<?php\n" .
-                "return array('repo' => 'Main',\n" .
+                "return array(
                 "    'name' => '{$this->config->getLowCaseName()}',\n" .
                 "    'displayname' => '{$this->config->getName()}',\n" .
-                "    'dir' => '_packages',\n" .
                 "    'description' => '{$this->config->getDescription()}',\n" .
                 "    'author' => '{$this->config->getAuthor()}',\n" .
-                "    'modx_version' => '2.3',\n" .
-                "    'users' => 'none-{$this->modx->site_id}');\n");
+                "    'modx_version' => '2.3',\n"
+            );
             fclose($info_file);
         }
         chmod($package_info, 0666);
