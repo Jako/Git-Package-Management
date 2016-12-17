@@ -42,19 +42,16 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         chmod($package_info, 0666);
 
         $packageName = $this->config->getLowCaseName();
-        $beta = (bool)preg_match('/.*?-(b|beta)\\d*/i', $this->builder->getTPBuilder()->getSignature());
+        $beta = (bool)preg_match('/.*?-(dev|a|alpha|b|beta|rc)\\d*/i', $this->builder->getTPBuilder()->getSignature());
 
         $curl = curl_init();
+        $url = $this->modx->getOption('packeteer.site_url') . 'rest/packeteer/package/scan/' . $packageName . '?' . http_build_query(array(
+                'beta' => (string)$beta,
+                'hash' => hash('sha256', $this->modx->getOption('packeteer.site_id') . $packageName . ((string)$beta))
+            ));
         curl_setopt_array($curl, array(
             CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL => $this->modx->getOption('packeteer.site_assets_url') . 'components/packeteer/connector.php',
-            CURLOPT_POST => 1,
-            CURLOPT_POSTFIELDS => array(
-                'action' => 'web/packages/scan',
-                'package' => $packageName,
-                'beta' => $beta,
-                'hash' => hash('sha256', $this->modx->getOption('packeteer.site_id') . $packageName . ((string)$beta))
-            )
+            CURLOPT_URL => $url
         ));
         $result = json_decode(curl_exec($curl), true);
         $this->modx->log(xPDO::LOG_LEVEL_DEBUG, $result['message'], '', 'GitPackageManagementBuildPackagePublishProcessor');
