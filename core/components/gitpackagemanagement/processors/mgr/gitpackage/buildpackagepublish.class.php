@@ -24,6 +24,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $targetPath = realpath(MODX_BASE_PATH . $this->modx->getOption('packeteer.site_extras_path'));
         $target = $targetPath . '/_packages/' . $this->builder->getTPBuilder()->getSignature() . '.transport.zip';
         copy($source, $target);
+        chmod($targetPath . '/_packages/', 0777);
         chmod($target, 0666);
 
         $package_info = $targetPath . '/_packages/' . $this->builder->getTPBuilder()->package->name . '.info.php';
