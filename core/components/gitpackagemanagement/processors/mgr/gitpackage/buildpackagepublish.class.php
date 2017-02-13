@@ -11,9 +11,16 @@ require_once dirname(dirname(dirname(dirname(__FILE__)))) . '/processors/mgr/git
  */
 class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagementBuildPackageProcessor
 {
+    /** @var  Packeteer $packeteer */
+    public $packeteer;
 
     public function process()
     {
+        $corePath = $this->modx->getOption('packeteer.core_path', null, $this->modx->getOption('core_path') . 'components/packeteer/');
+        $this->packeteer = $this->modx->getService('packeteer', 'Packeteer', $corePath . 'model/packeteer/', array(
+            'core_path' => $corePath
+        ));
+
         $process = parent::process();
         if ($process['success'] !== true) {
             return $process;
@@ -21,7 +28,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
 
         // @todo upload the package with sftp or similar
         $source = $this->config->getPackagePath() . '/_packages/' . $this->builder->getTPBuilder()->getSignature() . '.transport.zip';
-        $targetPath = realpath(MODX_BASE_PATH . $this->modx->getOption('packeteer.site_extras_path'));
+        $targetPath = realpath(MODX_BASE_PATH . $this->packeteer->getOption('site_extras_path'));
         $target = $targetPath . '/_packages/' . $this->builder->getTPBuilder()->getSignature() . '.transport.zip';
         copy($source, $target);
         chmod($targetPath . '/_packages/', 0777);
@@ -46,9 +53,9 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $beta = (bool)preg_match('/.*?-(dev|a|alpha|b|beta|rc)\\d*/i', $this->builder->getTPBuilder()->getSignature());
 
         $curl = curl_init();
-        $url = $this->modx->getOption('packeteer.site_url') . 'rest/packeteer/package/scan/' . $packageName . '?' . http_build_query(array(
+        $url = $this->packeteer->getOption('site_url') . 'rest/packeteer/package/scan/' . $packageName . '?' . http_build_query(array(
                 'beta' => (string)$beta,
-                'hash' => hash('sha256', $this->modx->getOption('packeteer.site_id') . $packageName . ((string)$beta))
+                'hash' => hash('sha256', $this->packeteer->getOption('site_id') . $packageName . ((string)$beta))
             ));
         curl_setopt_array($curl, array(
             CURLOPT_RETURNTRANSFER => 1,
@@ -63,6 +70,20 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         } else {
             return $this->failure($result['message']);
         }
+    }
+
+    protected function addCategory() {
+        $category = parent::addCategory();
+
+        $buildOptions = $this->config->getBuild()->getBuildOptions();
+
+        if ($this->modx->getOption('encrypt', $buildOptions, false)){
+            $this->modx->loadClass('packeteerVehicle', $this->packeteer->getOption('modelPath') . 'packeteervehicle/', true, true);
+
+            $categoryVehicle = $category->getVehicle();
+            $categoryVehicle->attributes['vehicle_class'] = 'packeteerVehicle';
+        }
+        return $category;
     }
 }
 
