@@ -78,12 +78,42 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $buildOptions = $this->config->getBuild()->getBuildOptions();
 
         if ($this->modx->getOption('encrypt', $buildOptions, false)){
-            $this->modx->loadClass('packeteerVehicle', $this->packeteer->getOption('modelPath') . 'packeteervehicle/', true, true);
+            $this->modx->loadClass('packeteerVehicle', $this->packeteer->getOption('vehiclePath'), true, true);
 
             $categoryVehicle = $category->getVehicle();
             $categoryVehicle->attributes['vehicle_class'] = 'packeteerVehicle';
         }
         return $category;
+    }
+
+    protected function prependVehicles() {
+        $resolversDir = $this->config->getBuild()->getResolver()->getResolversDir();
+        $resolversDir = trim($resolversDir, '/');
+        $resolversDir = $this->packagePath . '_build/' . $resolversDir . '/';
+
+        $this->modx->loadClass('xPDOFileVehicle', MODX_CORE_PATH. 'xpdo/transport/', true,true);
+        $fileObject = new xPDOFileVehicle();
+        $vehicle = $this->builder->createVehicle($fileObject, array(
+            'vehicle_class' => 'xPDOFileVehicle',
+            'object' => array(
+                'source' => $this->packagePath . '../packeteer_vehicle/',
+                'target' => 'return MODX_CORE_PATH . "components/";',
+                'name' => $this->config->getLowCaseName() . '_vehicle'
+            )
+        ));
+
+        $this->builder->putVehicle($vehicle);
+
+        $this->modx->loadClass('xPDOScriptVehicle', MODX_CORE_PATH. 'xpdo/transport/', true,true);
+        $fileObject = new xPDOScriptVehicle();
+        $vehicle = $this->builder->createVehicle($fileObject, array(
+            'vehicle_class' => 'xPDOScriptVehicle',
+            'object' => array(
+                'source' => $resolversDir. 'packeteer.vehicle.php'
+            )
+        ));
+
+        $this->builder->putVehicle($vehicle);
     }
 }
 
