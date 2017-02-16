@@ -87,33 +87,37 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
     }
 
     protected function prependVehicles() {
-        $resolversDir = $this->config->getBuild()->getResolver()->getResolversDir();
-        $resolversDir = trim($resolversDir, '/');
-        $resolversDir = $this->packagePath . '_build/' . $resolversDir . '/';
+        $buildOptions = $this->config->getBuild()->getBuildOptions();
 
-        $this->modx->loadClass('xPDOFileVehicle', MODX_CORE_PATH. 'xpdo/transport/', true,true);
-        $fileObject = new xPDOFileVehicle();
-        $vehicle = $this->builder->createVehicle($fileObject, array(
-            'vehicle_class' => 'xPDOFileVehicle',
-            'object' => array(
-                'source' => $this->packagePath . '../packeteer_vehicle/',
-                'target' => 'return MODX_CORE_PATH . "components/";',
-                'name' => $this->config->getLowCaseName() . '_vehicle'
-            )
-        ));
+        if ($this->modx->getOption('encrypt', $buildOptions, false)) {
+            $resolversDir = $this->config->getBuild()->getResolver()->getResolversDir();
+            $resolversDir = trim($resolversDir, '/');
+            $resolversDir = $this->packagePath . '_build/' . $resolversDir . '/';
 
-        $this->builder->putVehicle($vehicle);
+            $this->modx->loadClass('xPDOFileVehicle', MODX_CORE_PATH . 'xpdo/transport/', true, true);
+            $fileObject = new xPDOFileVehicle();
+            $vehicle = $this->builder->createVehicle($fileObject, array(
+                'vehicle_class' => 'xPDOFileVehicle',
+                'object' => array(
+                    'source' => $this->packagePath . '../packeteer_vehicle/',
+                    'target' => 'return MODX_CORE_PATH . "components/";',
+                    'name' => $this->config->getLowCaseName() . '_vehicle'
+                )
+            ));
 
-        $this->modx->loadClass('xPDOScriptVehicle', MODX_CORE_PATH. 'xpdo/transport/', true,true);
-        $fileObject = new xPDOScriptVehicle();
-        $vehicle = $this->builder->createVehicle($fileObject, array(
-            'vehicle_class' => 'xPDOScriptVehicle',
-            'object' => array(
-                'source' => $resolversDir. 'packeteer.vehicle.php'
-            )
-        ));
+            $this->builder->putVehicle($vehicle);
 
-        $this->builder->putVehicle($vehicle);
+            $this->modx->loadClass('xPDOScriptVehicle', MODX_CORE_PATH . 'xpdo/transport/', true, true);
+            $fileObject = new xPDOScriptVehicle();
+            $vehicle = $this->builder->createVehicle($fileObject, array(
+                'vehicle_class' => 'xPDOScriptVehicle',
+                'object' => array(
+                    'source' => $resolversDir . 'packeteer.vehicle.php'
+                )
+            ));
+
+            $this->builder->putVehicle($vehicle);
+        }
     }
 }
 
