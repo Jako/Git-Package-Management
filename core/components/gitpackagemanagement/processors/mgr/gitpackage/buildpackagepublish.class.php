@@ -26,44 +26,85 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             return $process;
         };
 
-        // @todo upload the package with sftp or similar
         $source = $this->config->getPackagePath() . '/_packages/' . $this->builder->getTPBuilder()->getSignature() . '.transport.zip';
-        $targetPath = realpath(MODX_BASE_PATH . $this->packeteer->getOption('site_extras_path'));
-        $target = $targetPath . '/_packages/' . $this->builder->getTPBuilder()->getSignature() . '.transport.zip';
-        copy($source, $target);
-        chmod($targetPath . '/_packages/', 0777);
-        chmod($target, 0666);
+        $packageAttributes = $this->builder->getTPBuilder()->package->attributes;
+        $buildOptions = $this->config->getBuild()->getBuildOptions();
 
-        $package_info = $targetPath . '/_packages/' . $this->builder->getTPBuilder()->package->name . '.info.php';
-        if (!file_exists($package_info)) {
+        $packageInfo = "<?php\n" .
+            "return array(\n" .
+            "    'name' => '{$this->config->getLowCaseName()}',\n" .
+            "    'displayname' => '{$this->config->getName()}',\n" .
+            "    'description' => '{$this->config->getDescription()}',\n" .
+            "    'author' => '{$this->config->getAuthor()}',\n" .
+            "    'instructions' => \"" . str_replace('"', '\"', $packageAttributes['readme']) . "\",\n" .
+            "    'changelog' => \"" . str_replace('"', '\"', $packageAttributes['changelog']) . "\",\n" .
+            "    'license' => \"" . str_replace('"', '\"', $packageAttributes['license']) . "\",\n" .
+            "    'modx_version' => '{$this->modx->getOption('modx_version', $buildOptions, $this->packeteer->getOption('minimal_modx_version'))}',\n" .
+            ");\n";
+
+        if ($this->packeteer->getOption('sftp_user')) {
+            $user = $this->packeteer->getOption('sftp_user');
+            $password = $this->packeteer->getOption('sftp_password');
+            $serverurl = $this->packeteer->getOption('sftp_serverurl');
+            $filename = basename($source);
+
+            $ch = curl_init();
+            $fp = fopen($source, 'r');
+            curl_setopt_array($ch, array(
+                CURLOPT_URL => 'sftp://' . $user . ':' . $password . '@' . $serverurl . $filename,
+                CURLOPT_UPLOAD => 1,
+                CURLOPT_PROTOCOLS => CURLPROTO_SFTP,
+                CURLOPT_INFILE => $fp,
+                CURLOPT_INFILESIZE => filesize($source)
+            ));
+            if (!$result = curl_exec($ch)) {
+                return $this->failure('cURL Error uploading package: ' . curl_error($ch));
+            }
+
+            $ch = curl_init();
+            $fp = fopen('php://memory', 'r+');
+            fputs($fp, $packageInfo);
+            rewind($fp);
+            curl_setopt_array($ch, array(
+                CURLOPT_URL => 'sftp://' . $user . ':' . $password . '@' . $serverurl . $this->builder->getTPBuilder()->package->name . '.info.php',
+                CURLOPT_UPLOAD => 1,
+                CURLOPT_PROTOCOLS => CURLPROTO_SFTP,
+                CURLOPT_INFILE => $fp,
+                CURLOPT_INFILESIZE => strlen($packageInfo)
+            ));
+            if (!$result = curl_exec($ch)) {
+                return $this->failure('cURL Error uploading package info: ' . curl_error($ch));
+            }
+        } else {
+            $targetPath = realpath(MODX_BASE_PATH . $this->packeteer->getOption('site_extras_path'));
+            $target = $targetPath . '/_packages/' . $this->builder->getTPBuilder()->getSignature() . '.transport.zip';
+            copy($source, $target);
+            chmod($targetPath . '/_packages/', 0777);
+            chmod($target, 0666);
+
+            $package_info = $targetPath . '/_packages/' . $this->builder->getTPBuilder()->package->name . '.info.php';
             $info_file = fopen($package_info, 'w');
-            fwrite($info_file, "<?php\n" .
-                "return array(\n" .
-                "    'name' => '{$this->config->getLowCaseName()}',\n" .
-                "    'displayname' => '{$this->config->getName()}',\n" .
-                "    'description' => '{$this->config->getDescription()}',\n" .
-                "    'author' => '{$this->config->getAuthor()}',\n" .
-                "    'modx_version' => '2.3');\n"
-            );
+            fwrite($info_file, $packageInfo);
             fclose($info_file);
+            chmod($package_info, 0666);
         }
-        chmod($package_info, 0666);
 
         $packageName = $this->config->getLowCaseName();
         $beta = (bool)preg_match('/.*?-(dev|a|alpha|b|beta|rc)\\d*/i', $this->builder->getTPBuilder()->getSignature());
 
-        $curl = curl_init();
-        $url = $this->packeteer->getOption('site_url') . 'rest/packeteer/package/scan/' . $packageName . '?' . http_build_query(array(
-                'beta' => (string)$beta,
-                'hash' => hash('sha256', $this->packeteer->getOption('site_id') . $packageName . ((string)$beta))
-            ));
-        curl_setopt_array($curl, array(
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL => $url
+        $ch = curl_init();
+        curl_setopt_array($ch, array(
+            CURLOPT_URL => $this->packeteer->getOption('site_url') . 'rest/packeteer/package/scan/' . $packageName . '?' . http_build_query(array(
+                    'beta' => (string)$beta,
+                    'hash' => hash('sha256', $this->packeteer->getOption('site_id') . $packageName . ((string)$beta))
+                )),
+            CURLOPT_RETURNTRANSFER => 1
         ));
-        $result = json_decode(curl_exec($curl), true);
-        $this->modx->log(xPDO::LOG_LEVEL_DEBUG, $result['message'], '', 'GitPackageManagementBuildPackagePublishProcessor');
-        curl_close($curl);
+        $result = json_decode(curl_exec($ch), true);
+        if ($result == null) {
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'cURL Error scan package: ' . curl_error($ch));
+        }
+        curl_close($ch);
 
         if (isset($result['success']) && $result['success'] == true) {
             return $this->success($result['message']);
@@ -72,21 +113,24 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         }
     }
 
-    protected function addCategory() {
+    protected function addCategory()
+    {
         $category = parent::addCategory();
 
         $buildOptions = $this->config->getBuild()->getBuildOptions();
 
-        if ($this->modx->getOption('encrypt', $buildOptions, false)){
+        if ($this->modx->getOption('encrypt', $buildOptions, false)) {
             $this->modx->loadClass('packeteerVehicle', $this->packeteer->getOption('vehiclePath'), true, true);
 
             $categoryVehicle = $category->getVehicle();
             $categoryVehicle->attributes['vehicle_class'] = 'packeteerVehicle';
+            $categoryVehicle->attributes[xPDOTransport::ABORT_INSTALL_ON_VEHICLE_FAIL] = true;
         }
         return $category;
     }
 
-    protected function prependVehicles() {
+    protected function prependVehicles()
+    {
         $buildOptions = $this->config->getBuild()->getBuildOptions();
 
         if ($this->modx->getOption('encrypt', $buildOptions, false)) {
@@ -106,6 +150,28 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             ));
 
             $this->builder->putVehicle($vehicle);
+
+            $this->modx->loadClass('xPDOScriptVehicle', MODX_CORE_PATH . 'xpdo/transport/', true, true);
+            $fileObject = new xPDOScriptVehicle();
+            $vehicle = $this->builder->createVehicle($fileObject, array(
+                'vehicle_class' => 'xPDOScriptVehicle',
+                'object' => array(
+                    'source' => $resolversDir . 'packeteer.vehicle.php'
+                )
+            ));
+
+            $this->builder->putVehicle($vehicle);
+        }
+    }
+
+    protected function appendVehicles()
+    {
+        $buildOptions = $this->config->getBuild()->getBuildOptions();
+
+        if ($this->modx->getOption('encrypt', $buildOptions, false)) {
+            $resolversDir = $this->config->getBuild()->getResolver()->getResolversDir();
+            $resolversDir = trim($resolversDir, '/');
+            $resolversDir = $this->packagePath . '_build/' . $resolversDir . '/';
 
             $this->modx->loadClass('xPDOScriptVehicle', MODX_CORE_PATH . 'xpdo/transport/', true, true);
             $fileObject = new xPDOScriptVehicle();
