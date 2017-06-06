@@ -30,17 +30,18 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $packageAttributes = $this->builder->getTPBuilder()->package->attributes;
         $buildOptions = $this->config->getBuild()->getBuildOptions();
 
+        $packageInfoArray = array(
+            'name' => $this->config->getLowCaseName(),
+            'displayname' => $this->config->getName(),
+            'description' => $this->config->getDescription(),
+            'author' => $this->config->getAuthor(),
+            'instructions' => utf8_encode($packageAttributes['readme']),
+            'changelog' => utf8_encode($packageAttributes['changelog']),
+            'license' => utf8_encode($packageAttributes['license']),
+            'modx_version' => $this->modx->getOption('modx_version', $buildOptions, $this->packeteer->getOption('minimal_modx_version'))
+        );
         $packageInfo = "<?php\n" .
-            "return array(\n" .
-            "    'name' => '{$this->config->getLowCaseName()}',\n" .
-            "    'displayname' => '{$this->config->getName()}',\n" .
-            "    'description' => '{$this->config->getDescription()}',\n" .
-            "    'author' => '{$this->config->getAuthor()}',\n" .
-            "    'instructions' => \"" . str_replace('"', '\"', $packageAttributes['readme']) . "\",\n" .
-            "    'changelog' => \"" . str_replace('"', '\"', $packageAttributes['changelog']) . "\",\n" .
-            "    'license' => \"" . str_replace('"', '\"', $packageAttributes['license']) . "\",\n" .
-            "    'modx_version' => '{$this->modx->getOption('modx_version', $buildOptions, $this->packeteer->getOption('minimal_modx_version'))}',\n" .
-            ");\n";
+            'return json_decode(\'' . json_encode($packageInfoArray, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) . '\', true);' . "\n";
 
         if ($this->packeteer->getOption('sftp_user')) {
             $user = $this->packeteer->getOption('sftp_user');
