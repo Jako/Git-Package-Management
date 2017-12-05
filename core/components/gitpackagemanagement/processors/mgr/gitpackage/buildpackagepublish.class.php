@@ -21,6 +21,17 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             'core_path' => $corePath
         ));
 
+        $this->prepare();
+        $buildOptions = $this->config->getBuild()->getBuildOptions();
+
+        $emptyFolders = $this->modx->getOption('empty_folders', $buildOptions, array());
+        if (!empty($emptyFolders)) {
+            foreach ($emptyFolders as $emptyFolder) {
+                $emptyFolder = str_replace('{package_path}', $this->config->getPackagePath() . '/', $emptyFolder);
+                $this->emptyFolder($emptyFolder);
+            }
+        }
+
         $process = parent::process();
         if ($process['success'] !== true) {
             return $process;
@@ -112,6 +123,20 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         } else {
             return $this->failure($result['message']);
         }
+    }
+
+    protected function emptyFolder($path)
+    {
+        $files = glob($path . '/*');
+        foreach ($files as $file) {
+            if (is_dir($file)) {
+                $this->emptyFolder($file);
+                rmdir($file);
+            } else {
+                unlink($file);
+            }
+        }
+        return;
     }
 
     protected function addCategory()
