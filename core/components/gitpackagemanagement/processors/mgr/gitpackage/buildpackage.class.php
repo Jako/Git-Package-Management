@@ -316,7 +316,7 @@ class GitPackageManagementBuildPackageProcessor extends modObjectProcessor {
                 $snippetObject->set('name', $configSnippet->getName());
                 $snippetObject->set('description', $configSnippet->getDescription());
                 $snippetObject->set('property_preprocess', $configSnippet->getPropertyPreProcess());
-                $snippetObject->set('snippet', $this->builder->getFileContent($this->corePath . $configSnippet->getFilePath()));
+                $snippetObject->set('content', $this->builder->getFileContent($this->corePath . $configSnippet->getFilePath()));
 
                 $snippetObject->setProperties($configSnippet->getProperties());
                 $snippets[] = $snippetObject;
@@ -339,7 +339,7 @@ class GitPackageManagementBuildPackageProcessor extends modObjectProcessor {
                 $chunkObject->set('name', $configChunk->getName());
                 $chunkObject->set('description', $configChunk->getDescription());
                 $chunkObject->set('property_preprocess', $configChunk->getPropertyPreProcess());
-                $chunkObject->set('snippet', $this->builder->getFileContent($this->corePath . $configChunk->getFilePath()));
+                $chunkObject->set('content', $this->builder->getFileContent($this->corePath . $configChunk->getFilePath()));
 
                 $chunkObject->setProperties($configChunk->getProperties());
                 $chunks[] = $chunkObject;
@@ -425,8 +425,9 @@ class GitPackageManagementBuildPackageProcessor extends modObjectProcessor {
                 $pluginObject = $this->modx->newObject('modPlugin');
                 $pluginObject->set('name', $configPlugin->getName());
                 $pluginObject->set('description', $configPlugin->getDescription());
+                $pluginObject->set('disabled', $configPlugin->getDisabled());
                 $pluginObject->set('property_preprocess', $configPlugin->getPropertyPreProcess());
-                $pluginObject->set('plugincode', $this->builder->getFileContent($this->corePath . $configPlugin->getFilePath()));
+                $pluginObject->set('content', $this->builder->getFileContent($this->corePath . $configPlugin->getFilePath()));
 
                 $events = $configPlugin->getEvents();
                 if (count($events) > 0) {
