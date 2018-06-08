@@ -29,6 +29,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         };
 
         $source = $this->config->getPackagePath() . '/_packages/' . $this->builder->getTPBuilder()->getSignature() . '.transport.zip';
+        chmod($source, 0666);
         $packageAttributes = $this->builder->getTPBuilder()->package->attributes;
         $buildOptions = $this->config->getBuild()->getBuildOptions();
 
@@ -47,36 +48,30 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
 
         if ($this->packeteer->getOption('sftp_user')) {
             $user = $this->packeteer->getOption('sftp_user');
-            $password = $this->packeteer->getOption('sftp_password');
             $serverurl = $this->packeteer->getOption('sftp_serverurl');
+            $serverpath = $this->packeteer->getOption('sftp_serverpath');
+            $publickey = $this->packeteer->getOption('sftp_publickey');
+            $privatekey = $this->packeteer->getOption('sftp_privatekey');
+            $secret = $this->packeteer->getOption('sftp_secret');
             $filename = basename($source);
 
-            $ch = curl_init();
-            $fp = fopen($source, 'r');
-            curl_setopt_array($ch, array(
-                CURLOPT_URL => 'sftp://' . $user . ':' . $password . '@' . $serverurl . $filename,
-                CURLOPT_UPLOAD => 1,
-                CURLOPT_PROTOCOLS => CURLPROTO_SFTP,
-                CURLOPT_INFILE => $fp,
-                CURLOPT_INFILESIZE => filesize($source)
-            ));
-            if (!$result = curl_exec($ch)) {
-                return $this->failure('cURL Error uploading package: ' . curl_error($ch));
-            }
+            $connection = ssh2_connect($serverurl, 22, array('hostkey' => 'ssh-rsa'));
 
-            $ch = curl_init();
-            $fp = fopen('php://memory', 'r+');
-            fputs($fp, $packageInfo);
-            rewind($fp);
-            curl_setopt_array($ch, array(
-                CURLOPT_URL => 'sftp://' . $user . ':' . $password . '@' . $serverurl . $this->builder->getTPBuilder()->package->name . '.info.php',
-                CURLOPT_UPLOAD => 1,
-                CURLOPT_PROTOCOLS => CURLPROTO_SFTP,
-                CURLOPT_INFILE => $fp,
-                CURLOPT_INFILESIZE => strlen($packageInfo)
-            ));
-            if (!$result = curl_exec($ch)) {
-                return $this->failure('cURL Error uploading package info: ' . curl_error($ch));
+            if (ssh2_auth_pubkey_file($connection, $user, $publickey, $privatekey, $secret)) {
+                if (ssh2_scp_send($connection, $source, $serverpath . $filename, 0666) == false) {
+                    return $this->failure('SFTP Error uploading package.');
+                }
+                $package_info = $this->config->getPackagePath() . '/_packages/' . $this->builder->getTPBuilder()->package->name . '.info.php';
+                $info_file = fopen($package_info, 'w');
+                fwrite($info_file, $packageInfo);
+                fclose($info_file);
+                chmod($info_file, 0666);
+
+                if (ssh2_scp_send($connection, $package_info, $serverpath . $this->builder->getTPBuilder()->package->name . '.info.php', 0666) == false) {
+                    return $this->failure('SFTP Error uploading package.');
+                }
+            } else {
+                return $this->failure('SFTP Connection Error.');
             }
         } else {
             $targetPath = realpath(MODX_BASE_PATH . $this->packeteer->getOption('site_extras_path'));
@@ -103,7 +98,8 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 )),
             CURLOPT_RETURNTRANSFER => 1
         ));
-        $result = json_decode(curl_exec($ch), true);
+        $result = curl_exec($ch);
+        $result = json_decode($result, true);
         if ($result == null) {
             $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'cURL Error scan package: ' . curl_error($ch));
         }

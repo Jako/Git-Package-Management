@@ -270,7 +270,7 @@ Ext.extend(GitPackageManagement.grid.Packages,MODx.grid.Grid,{
             ,listeners: {
                 'success':{fn:function(r) {
                     this.updateMask.hide();
-                    MODx.msg.alert(_('gitpackagemanagement.update_package'), _('gitpackagemanagement.update_package_success'));
+                    MODx.msg.alert(_('gitpackagemanagement.update_package'), r.message);
                     this.refresh();
                 },scope:this}
                 ,'failure':{fn:function(r) {
