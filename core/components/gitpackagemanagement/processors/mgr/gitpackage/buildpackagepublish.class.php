@@ -65,7 +65,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 $info_file = fopen($package_info, 'w');
                 fwrite($info_file, $packageInfo);
                 fclose($info_file);
-                chmod($info_file, 0666);
+                chmod($package_info, 0666);
 
                 if (ssh2_scp_send($connection, $package_info, $serverpath . $this->builder->getTPBuilder()->package->name . '.info.php', 0666) == false) {
                     return $this->failure('SFTP Error uploading package.');
