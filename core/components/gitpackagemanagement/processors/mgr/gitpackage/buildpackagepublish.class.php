@@ -23,6 +23,14 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
 
         $this->prepare();
 
+        if (file_exists($this->config->getPackagePath() . '/Gruntfile.js')) {
+            exec('export PATH=$PATH:/usr/local/bin; /usr/local/bin/grunt --gruntfile=' . $this->config->getPackagePath() . '/Gruntfile.js default 2>&1', $execResult, $execVal);
+            if ($execVal != 0) {
+                $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Grunt issue!' . "\n" . implode("\n", $execResult));
+                return $this->failure('Grunt issue!');
+            }
+        }
+
         $process = parent::process();
         if ($process['success'] !== true) {
             return $process;
