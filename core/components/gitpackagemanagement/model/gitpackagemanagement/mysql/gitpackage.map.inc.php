@@ -34,7 +34,7 @@ $xpdo_meta_map['GitPackage']= array (
     'description' => 
     array (
       'dbtype' => 'text',
-      'phptype' => 'text',
+      'phptype' => 'string',
       'null' => false,
       'default' => '',
     ),
