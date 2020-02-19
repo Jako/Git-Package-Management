@@ -131,8 +131,7 @@ class Install extends GPMCommand
     protected function getConfigFileContent($corePath, $configKey)
     {
         return "<?php
-define('MODX_CORE_PATH', '" . $corePath . "');
-define('MODX_CONFIG_KEY', '" . $configKey . "');";
+require(" . realpath(MODX_CORE_PATH . '../../') . "/config.core.php');";
     }
 
     protected function install($packagesDir, $dir, $packagesBaseUrl, OutputInterface $output)
