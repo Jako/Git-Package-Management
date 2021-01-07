@@ -11,7 +11,7 @@ require_once dirname(dirname(dirname(dirname(__FILE__)))) . '/processors/mgr/git
  */
 class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagementBuildPackageProcessor
 {
-    /** @var  Packeteer $packeteer */
+    /** @var Packeteer $packeteer */
     public $packeteer;
 
     public function process()
@@ -46,7 +46,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $lexiconPath = $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/lexicon/';
         $lexiconPathIterator = new RecursiveDirectoryIterator($lexiconPath, RecursiveDirectoryIterator::SKIP_DOTS);
         foreach (new RecursiveIteratorIterator($lexiconPathIterator, RecursiveIteratorIterator::SELF_FIRST, RecursiveIteratorIterator::CATCH_GET_CHILD) as $file => $info) {
-            if (in_array($info->getFilename(), array('_missing.php', '_superfluous.php'))) {
+            if (in_array($info->getFilename(), array('_variable.php', '_missing.php', '_superfluous.php'))) {
                 @unlink($info->getRealPath());
             }
         }
