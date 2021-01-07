@@ -24,7 +24,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $this->prepare();
 
         $execVal = 0;
-        $execResult = '';
+        $execResult = array();
         if (file_exists($this->config->getPackagePath() . '/Gruntfile.js')) {
             exec('export PATH=$PATH:/usr/local/bin; /usr/local/bin/grunt --gruntfile=' . $this->config->getPackagePath() . '/Gruntfile.js default 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
@@ -34,7 +34,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         }
 
         $execVal = 0;
-        $execResult = '';
+        $execResult = array();
         if (file_exists($this->config->getPackagePath() . '/test/phpunit.xml')) {
             exec('export PATH=$PATH:/usr/local/bin; /usr/local/bin/phpunit --configuration ' . $this->config->getPackagePath() . '/test/phpunit.xml 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
