@@ -29,7 +29,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             exec('export PATH=$PATH:/usr/local/bin; /usr/local/bin/grunt --gruntfile=' . $this->config->getPackagePath() . '/Gruntfile.js default 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Grunt issue!' . "\n" . implode("\n", $execResult));
-                return $this->failure('Grunt issue!');
+                return $this->failure('Grunt issue!' . '<br>' . implode('<br>', $execResult));
             }
         }
 
@@ -39,7 +39,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             exec('export PATH=$PATH:/usr/local/bin; /usr/local/bin/phpunit --configuration ' . $this->config->getPackagePath() . '/test/phpunit.xml 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'phpUnit issue!' . "\n" . implode("\n", $execResult));
-                return $this->failure('phpUnit issue!');
+                return $this->failure('phpUnit issue!' . '<br>' . implode('<br>', $execResult));
             }
         }
 
