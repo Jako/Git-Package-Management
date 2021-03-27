@@ -2,6 +2,14 @@
 require_once dirname(dirname(dirname(dirname(__FILE__)))) . '/model/gitpackagemanagement/gpc/gitpackageconfig.class.php';
 require_once dirname(dirname(dirname(dirname(__FILE__)))) . '/model/gitpackagemanagement/builder/gitpackagebuilder.class.php';
 require_once dirname(dirname(dirname(dirname(__FILE__)))) . '/processors/mgr/gitpackage/buildpackage.class.php';
+require_once dirname(dirname(dirname(dirname(__FILE__)))) . '/vendor/autoload.php';
+
+use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\PhpseclibV2\SftpConnectionProvider;
+use League\Flysystem\PhpseclibV2\SftpAdapter;
+use League\Flysystem\UnableToWriteFile;
+use League\Flysystem\UnixVisibility\PortableVisibilityConverter;
 
 /**
  * Clone git repository and install it
@@ -54,7 +62,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $process = parent::process();
         if ($process['success'] !== true) {
             return $process;
-        };
+        }
 
         $source = $this->config->getPackagePath() . '/_packages/' . $this->builder->getTPBuilder()->getSignature() . '.transport.zip';
         chmod($source, 0666);
@@ -75,31 +83,46 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             'return json_decode(\'' . json_encode($packageInfoArray, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) . '\', true);' . "\n";
 
         if ($this->packeteer->getOption('sftp_user')) {
-            $user = $this->packeteer->getOption('sftp_user');
-            $serverurl = $this->packeteer->getOption('sftp_serverurl');
-            $serverpath = $this->packeteer->getOption('sftp_serverpath');
-            $publickey = $this->packeteer->getOption('sftp_publickey');
-            $privatekey = $this->packeteer->getOption('sftp_privatekey');
-            $secret = $this->packeteer->getOption('sftp_secret');
-            $filename = basename($source);
 
-            $connection = ssh2_connect($serverurl, 22, array('hostkey' => 'ssh-rsa'));
+            $filesystem = new Filesystem(new SftpAdapter(
+                new SftpConnectionProvider(
+                    $this->packeteer->getOption('sftp_serverurl'),
+                    $this->packeteer->getOption('sftp_user'),
+                    null,
+                    $this->packeteer->getOption('sftp_privatekey'),
+                    $this->packeteer->getOption('sftp_secret')
+                ),
+                $this->packeteer->getOption('sftp_serverpath'),
+                PortableVisibilityConverter::fromArray([
+                    'file' => [
+                        'public' => 0664,
+                        'private' => 0644,
+                    ],
+                    'dir' => [
+                        'public' => 0775,
+                        'private' => 0755,
+                    ],
+                ])
+            ));
 
-            if (ssh2_auth_pubkey_file($connection, $user, $publickey, $privatekey, $secret)) {
-                if (ssh2_scp_send($connection, $source, $serverpath . $filename, 0666) == false) {
-                    return $this->failure('SFTP Error uploading package.');
-                }
-                $package_info = $this->config->getPackagePath() . '/_packages/' . $this->builder->getTPBuilder()->package->name . '.info.php';
-                $info_file = fopen($package_info, 'w');
-                fwrite($info_file, $packageInfo);
-                fclose($info_file);
-                chmod($package_info, 0666);
+            try {
+                $file = fopen($source, 'r');
+                $filesystem->writeStream(basename($source), $file);
+            } catch (FilesystemException | UnableToWriteFile $exception) {
+                return $this->failure('SFTP Error uploading package: ' . $exception->getMessage());
+            }
 
-                if (ssh2_scp_send($connection, $package_info, $serverpath . $this->builder->getTPBuilder()->package->name . '.info.php', 0666) == false) {
-                    return $this->failure('SFTP Error uploading package.');
-                }
-            } else {
-                return $this->failure('SFTP Connection Error.');
+            $package_info = $this->config->getPackagePath() . '/_packages/' . $this->builder->getTPBuilder()->package->name . '.info.php';
+            $info_file = fopen($package_info, 'w');
+            fwrite($info_file, $packageInfo);
+            fclose($info_file);
+            chmod($package_info, 0666);
+
+            try {
+                $file = fopen($package_info, 'r');
+                $filesystem->writeStream(basename($package_info), $file);
+            } catch (FilesystemException | UnableToWriteFile $exception) {
+                return $this->failure('SFTP Error uploading package: ' . $exception->getMessage());
             }
         } else {
             $targetPath = realpath(MODX_BASE_PATH . $this->packeteer->getOption('site_extras_path'));
