@@ -173,15 +173,18 @@ class GitPackageManagementCreateProcessor extends modObjectCreateProcessor {
      * @param $package string Path to folder of cloned repository
      */
     private function installPackage($package){
-        $this->createConfigFiles($package);
-        $this->createNamespace();
-        $this->createMenusAndActions();
-        $this->createSystemSettings();
-        $this->createTables();
-        $this->addExtensionPackage();
-        $this->clearCache();
-        $this->createElements();
-        $this->createResources();
+        if (!$this->modx->gitpackagemanagement->getOption('disable_create_elements')){
+            $this->createConfigFiles($package);
+            $this->createNamespace();
+            $this->createMenusAndActions();
+            $this->createSystemSettings();
+            $this->createTables();
+            $this->addExtensionPackage();
+            $this->clearCache();
+            $this->createElements();
+            $this->createResources();            
+        }
+
     }
 
     /**
@@ -391,6 +394,11 @@ class GitPackageManagementCreateProcessor extends modObjectCreateProcessor {
                 }
             } else {
                 $parent = $this->category->id;
+            }
+
+            $rank = $category->getRank();
+            if (!empty($rank)) {
+                $categoryObject->set('rank', $rank);
             }
 
             $categoryObject->set('parent', $parent);
