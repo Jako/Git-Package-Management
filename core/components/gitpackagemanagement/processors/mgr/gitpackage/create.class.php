@@ -162,8 +162,7 @@ class GitPackageManagementCreateProcessor extends modObjectCreateProcessor {
      */
     private function createConfigFiles($package){
         $coreConfigContent = "<?php\n" .
-                             "define('MODX_CORE_PATH', '".str_replace('\\', '\\\\', MODX_CORE_PATH)."');\n" .
-                             "define('MODX_CONFIG_KEY', '".MODX_CONFIG_KEY."');";
+                             "require('" . realpath(MODX_CORE_PATH . '../../') . "/config.core.php');";
         file_put_contents($package . '/config.core.php', $coreConfigContent);
 
         $this->modx->log(modX::LOG_LEVEL_INFO, 'config.core.php file created.');

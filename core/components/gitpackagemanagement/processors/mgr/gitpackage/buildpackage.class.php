@@ -573,6 +573,8 @@ class GitPackageManagementBuildPackageProcessor extends modObjectProcessor {
                     'source' => $resolversDir . $this->modx->getOption('encrypted_resolver', $buildOptions, 'resolve.encrypted.php'),
                 )
             ));
+
+            $this->builder->putVehicle($vehicle);
         }
     }
 

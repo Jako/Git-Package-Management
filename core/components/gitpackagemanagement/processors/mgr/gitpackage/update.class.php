@@ -75,7 +75,12 @@ class GitPackageManagementUpdatePackageProcessor extends modObjectUpdateProcesso
 
         $this->setProperty('config', $this->modx->toJSON($config));
 
-        $this->object->set('updatedon', time());
+        $buildOptions = $this->newConfig->getBuild()->getBuildOptions();
+        if ($buildDate = $this->modx->getOption('builddate', $buildOptions, 0)) {
+            $this->object->set('updatedon', strtotime($buildDate . strftime('%H:%M:%S')));
+        } else {
+            $this->object->set('updatedon', time());
+        }
 
         return parent::beforeSet();
     }
