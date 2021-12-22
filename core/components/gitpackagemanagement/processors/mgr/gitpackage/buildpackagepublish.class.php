@@ -43,6 +43,27 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
 
         $execVal = 0;
         $execResult = array();
+        if (file_exists($this->config->getPackagePath() . '/gulpfile.js')) {
+            exec('export PATH=$PATH:/usr/local/bin; /usr/local/bin/gulp --gulpfile=' . $this->config->getPackagePath() . '/gulpfile.js default 2>&1', $execResult, $execVal);
+            if ($execVal != 0) {
+                $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Gulp issue!' . "\n" . implode("\n", $execResult));
+                return $this->failure('Gulp issue!' . '<br>' . implode('<br>', $execResult));
+            }
+        }
+
+        $execVal = 0;
+        $execResult = array();
+        if (file_exists($this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/composer.json')) {
+            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php7.4.21/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer install --prefer-dist --no-dev --no-progress --optimize-autoloader --working-dir=' . $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/' . ' 2>&1', $execResult, $execVal);
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Running composer for ' . $this->config->getName() . ' ' . $this->config->getVersion() . "\n" . implode("\n", $execResult));
+            if ($execVal != 0) {
+                $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Composer issue!');
+                return $this->failure('Composer issue!' . '<br>' . implode('<br>', $execResult));
+            }
+        }
+
+        $execVal = 0;
+        $execResult = array();
         if (file_exists($this->config->getPackagePath() . '/test/phpunit.xml')) {
             exec('export PATH=$PATH:/usr/local/bin; /usr/local/bin/phpunit --configuration ' . $this->config->getPackagePath() . '/test/phpunit.xml 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
