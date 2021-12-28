@@ -65,7 +65,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $execVal = 0;
         $execResult = array();
         if (file_exists($this->config->getPackagePath() . '/test/phpunit.xml')) {
-            exec('export PATH=$PATH:/usr/local/bin; /usr/local/bin/phpunit --configuration ' . $this->config->getPackagePath() . '/test/phpunit.xml 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php7.4.21/bin; /usr/local/bin/phpunit --configuration ' . $this->config->getPackagePath() . '/test/phpunit.xml 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'phpUnit issue!' . "\n" . implode("\n", $execResult));
                 return $this->failure('phpUnit issue!' . '<br>' . implode('<br>', $execResult));
