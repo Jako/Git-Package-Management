@@ -100,7 +100,7 @@ Define build options here. These options could be used to modify the build proce
         "{package_path}core/components/xxx/vendor/mpdf/mpdf/tmp" : "*",
         "{package_path}core/components/xxx/vendor/mpdf/mpdf/ttfonts" : "!{DejaVu,Free}*",
         "{package_path}core/components/xxx/vendor/mpdf/mpdf/ttfontdata" : "*"
-      }
+      },
       "encrypt": true
     }
 }
