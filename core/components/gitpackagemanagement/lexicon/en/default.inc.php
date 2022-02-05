@@ -33,6 +33,7 @@ $_lang['gitpackagemanagement.update_mask'] = 'Updating package';
 $_lang['gitpackagemanagement.preserve_package'] = 'Preserve package';
 $_lang['gitpackagemanagement.build_package'] = 'Build package';
 $_lang['gitpackagemanagement.build_package_publish'] = 'Build & publish package';
+$_lang['gitpackagemanagement.run_resolver'] = 'Run package resolver';
 $_lang['gitpackagemanagement.check_lexicon'] = 'Check Lexicon';
 
 //Options

@@ -109,6 +109,9 @@ Ext.extend(GitPackageManagement.grid.Packages,MODx.grid.Grid,{
             text: _('gitpackagemanagement.build_package_publish')
             ,handler: this.buildPackagePublish
         });m.push({
+            text: _('gitpackagemanagement.run_resolver')
+            ,handler: this.runResolvers
+        });m.push({
             text: _('gitpackagemanagement.preserve_package')
             ,handler: this.preservePackage
         });
@@ -281,6 +284,28 @@ Ext.extend(GitPackageManagement.grid.Packages,MODx.grid.Grid,{
                 ,'failure':{fn:function(r) {
                         this.updateMask.hide();
                         MODx.msg.alert(_('gitpackagemanagement.update_package'), r.message);
+                    },scope:this}
+            }
+        });
+    }
+
+    ,runResolvers: function(){
+        this.updateMask.show();
+        MODx.Ajax.request({
+            url: GitPackageManagement.config.connectorUrl
+            ,params: {
+                action: 'mgr/gitpackage/runresolvers'
+                ,id: this.menu.record.id
+            }
+            ,listeners: {
+                'success':{fn:function(r) {
+                        this.updateMask.hide();
+                        MODx.msg.alert(_('gitpackagemanagement.run_resolver'), r.message);
+                        this.refresh();
+                    },scope:this}
+                ,'failure':{fn:function(r) {
+                        this.updateMask.hide();
+                        MODx.msg.alert(_('gitpackagemanagement.run_resolver'), r.message);
                     },scope:this}
             }
         });
