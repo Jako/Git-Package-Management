@@ -54,7 +54,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $execVal = 0;
         $execResult = array();
         if (file_exists($this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/composer.json')) {
-            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php7.4.21/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer install --prefer-dist --no-dev --no-progress --optimize-autoloader --working-dir=' . $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/' . ' 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php7.4.26/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer install --prefer-dist --no-dev --no-progress --optimize-autoloader --working-dir=' . $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/' . ' 2>&1', $execResult, $execVal);
             $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Running composer for ' . $this->config->getName() . ' ' . $this->config->getVersion() . "\n" . implode("\n", $execResult));
             if ($execVal != 0) {
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Composer issue!');
@@ -65,7 +65,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $execVal = 0;
         $execResult = array();
         if (file_exists($this->config->getPackagePath() . '/test/phpunit.xml')) {
-            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php7.4.21/bin; /usr/local/bin/phpunit --configuration ' . $this->config->getPackagePath() . '/test/phpunit.xml 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php7.4.26/bin; /usr/local/bin/phpunit --configuration ' . $this->config->getPackagePath() . '/test/phpunit.xml 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'phpUnit issue!' . "\n" . implode("\n", $execResult));
                 return $this->failure('phpUnit issue!' . '<br>' . implode('<br>', $execResult));
@@ -82,7 +82,21 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             }
         }
 
+        $useComposer = $this->modx->getOption('composer', $this->config->getBuild()->getBuildOptions(), false);
+        if ($useComposer) {
+            // Don't include the vendor folder in the package
+            $vendorPath = $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/vendor/';
+            $tempVendorPath = $this->config->getPackagePath() . '/temp_vendor/';
+            rename($vendorPath, $tempVendorPath);
+        }
+
         $process = parent::process();
+
+        if ($useComposer) {
+            // Move the vendor folder back
+            rename($tempVendorPath, $vendorPath);
+        }
+
         if ($process['success'] !== true) {
             return $process;
         }
