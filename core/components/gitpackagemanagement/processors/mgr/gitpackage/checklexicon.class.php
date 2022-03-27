@@ -178,7 +178,7 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
     private function addPhpKeys($filename) {
         $fileContent = file_get_contents($filename);
         $results = array();
-        preg_match_all('/(modx|xpdo)->lexicon\((["\'])(' . $this->config->getLowCaseName() . '\..*?)\2\s*[,\)]/m', $fileContent, $results);
+        preg_match_all('/(modx|xpdo)->lexicon\((["\'])(' . $this->config->getLowCaseName() . '.*?)\2\s*[,)]/m', $fileContent, $results);
         if (is_array($results[3])) {
             foreach ($results[3] as $result) {
                 // Don't add lexicon keys that ends with a dot or an underscore or that contain a variable
