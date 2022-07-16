@@ -39,6 +39,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Grunt issue!' . "\n" . implode("\n", $execResult));
                 return $this->failure('Grunt issue!' . '<br>' . implode('<br>', $execResult));
             }
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Grunt successful.');
         }
 
         $execVal = 0;
@@ -49,6 +50,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Gulp issue!' . "\n" . implode("\n", $execResult));
                 return $this->failure('Gulp issue!' . '<br>' . implode('<br>', $execResult));
             }
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Gulp successful.');
         }
 
         $execVal = 0;
@@ -60,6 +62,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Composer issue!');
                 return $this->failure('Composer issue!' . '<br>' . implode('<br>', $execResult));
             }
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Composer successful.');
         }
 
         $execVal = 0;
@@ -70,6 +73,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'phpUnit issue!' . "\n" . implode("\n", $execResult));
                 return $this->failure('phpUnit issue!' . '<br>' . implode('<br>', $execResult));
             }
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'phpUnit successful.');
         }
 
         $lexiconPath = $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/lexicon/';
@@ -80,6 +84,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                     @unlink($info->getRealPath());
                 }
             }
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Lexicon test files deleted.');
         }
 
         $useComposer = $this->modx->getOption('composer', $this->config->getBuild()->getBuildOptions(), false);
@@ -88,6 +93,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             $vendorPath = $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/vendor/';
             $tempVendorPath = $this->config->getPackagePath() . '/temp_vendor/';
             rename($vendorPath, $tempVendorPath);
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Temporary move the vendor folder from the package.');
         }
 
         $process = parent::process();
@@ -95,6 +101,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         if ($useComposer) {
             // Move the vendor folder back
             rename($tempVendorPath, $vendorPath);
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Move the vendor folder back into the package.');
         }
 
         if ($process['success'] !== true) {
@@ -146,8 +153,11 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 $file = fopen($source, 'r');
                 $filesystem->writeStream(basename($source), $file);
             } catch (FilesystemException | UnableToWriteFile $exception) {
+                $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'SFTP Error uploading package: ' . $exception->getMessage());
                 return $this->failure('SFTP Error uploading package: ' . $exception->getMessage());
             }
+
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Upload the package per FTP to the package provider.');
 
             $package_info = $this->config->getPackagePath() . '/_packages/' . $this->builder->getTPBuilder()->package->name . '.info.php';
             $info_file = fopen($package_info, 'w');
@@ -159,8 +169,11 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 $file = fopen($package_info, 'r');
                 $filesystem->writeStream(basename($package_info), $file);
             } catch (FilesystemException | UnableToWriteFile $exception) {
-                return $this->failure('SFTP Error uploading package: ' . $exception->getMessage());
+                $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'SFTP Error uploading package info: ' . $exception->getMessage());
+                return $this->failure('SFTP Error uploading package info: ' . $exception->getMessage());
             }
+
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Upload the package info per FTP to the package provider.');
         } else {
             $targetPath = realpath(MODX_BASE_PATH . $this->packeteer->getOption('site_extras_path'));
             $target = $targetPath . '/_packages/' . $this->builder->getTPBuilder()->getSignature() . '.transport.zip';
@@ -173,6 +186,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             fwrite($info_file, $packageInfo);
             fclose($info_file);
             chmod($package_info, 0666);
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Update the package info file.');
         }
 
         $packageName = $this->config->getLowCaseName();
@@ -187,10 +201,14 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_SSL_VERIFYPEER => 0
         ));
+        $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Before Scan package.');
         $result = curl_exec($ch);
+        $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Scan package: ' . $result);
         $result = json_decode($result, true);
         if ($result == null) {
             $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'cURL Error scan package: ' . curl_error($ch));
+        } else {
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Scan for the package on the package provider.');
         }
         curl_close($ch);
 

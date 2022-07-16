@@ -271,6 +271,7 @@ Ext.extend(GitPackageManagement.grid.Packages,MODx.grid.Grid,{
         this.updateMask.show();
         MODx.Ajax.request({
             url: GitPackageManagement.config.connectorUrl
+            ,timeout: 120000
             ,params: {
                 action: 'mgr/gitpackage/buildpackagepublish'
                 ,id: this.menu.record.id
