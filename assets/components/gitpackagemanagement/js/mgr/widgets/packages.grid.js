@@ -119,6 +119,9 @@ Ext.extend(GitPackageManagement.grid.Packages,MODx.grid.Grid,{
         m.push({
             text: _('gitpackagemanagement.check_lexicon')
             ,handler: this.checkLexicon
+        });m.push({
+            text: _('gitpackagemanagement.create_docs')
+            ,handler: this.createDocs
         });
         m.push('-');
         m.push({
@@ -329,6 +332,28 @@ Ext.extend(GitPackageManagement.grid.Packages,MODx.grid.Grid,{
                 ,'failure':{fn:function(r) {
                     this.updateMask.hide();
                     MODx.msg.alert(_('gitpackagemanagement.check_lexicon'), r.message);
+                },scope:this}
+            }
+        });
+    }
+
+    ,createDocs: function(){
+        this.updateMask.show();
+        MODx.Ajax.request({
+            url: GitPackageManagement.config.connectorUrl
+            ,params: {
+                action: 'mgr/gitpackage/createdocs'
+                ,id: this.menu.record.id
+            }
+            ,listeners: {
+                'success':{fn:function(r) {
+                    this.updateMask.hide();
+                    MODx.msg.alert(_('gitpackagemanagement.create_docs'), r.message);
+                    this.refresh();
+                },scope:this}
+                ,'failure':{fn:function(r) {
+                    this.updateMask.hide();
+                    MODx.msg.alert(_('gitpackagemanagement.create_docs'), r.message);
                 },scope:this}
             }
         });

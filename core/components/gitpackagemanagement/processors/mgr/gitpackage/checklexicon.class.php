@@ -24,7 +24,6 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
 
     private $invalidLexicons = array();
 
-
     public function prepare(){
         $id = $this->getProperty('id');
         if ($id == null) return $this->failure();

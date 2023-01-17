@@ -35,6 +35,9 @@ $_lang['gitpackagemanagement.build_package'] = 'Build package';
 $_lang['gitpackagemanagement.build_package_publish'] = 'Build & publish package';
 $_lang['gitpackagemanagement.run_resolver'] = 'Run package resolver';
 $_lang['gitpackagemanagement.check_lexicon'] = 'Check Lexicon';
+$_lang['gitpackagemanagement.create_docs'] = 'Create Documentation';
+$_lang['gitpackagemanagement.create_docs_settings'] = 'Settings';
+$_lang['gitpackagemanagement.create_docs_properties'] = 'Properties';
 
 //Options
 $_lang['area_encrypt'] = 'Encrypt';
