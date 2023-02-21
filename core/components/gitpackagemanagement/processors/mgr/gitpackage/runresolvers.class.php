@@ -65,7 +65,12 @@ class GitPackageManagementRunResolversProcessor extends modObjectProcessor {
         $resolversBefore = $resolver->getBefore();
         $resolversAfter = $resolver->getAfter();
 
+        $this->modx->loadClass('transport.xPDOTransport', XPDO_CORE_PATH, true, true);
         foreach ($resolversBefore as $resolver) {
+            $object = $this->object;
+            $options = [
+                xPDOTransport::PACKAGE_ACTION => xPDOTransport::ACTION_INSTALL,
+            ];
             $result = include $resolversDir . $resolver;
             if (!$result) {
                 return $this->failure('Before resolver ' . $resolver . ' failure!');
