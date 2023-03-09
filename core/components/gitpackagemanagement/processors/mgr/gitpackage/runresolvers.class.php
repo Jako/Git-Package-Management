@@ -66,11 +66,11 @@ class GitPackageManagementRunResolversProcessor extends modObjectProcessor {
         $resolversAfter = $resolver->getAfter();
 
         $this->modx->loadClass('transport.xPDOTransport', XPDO_CORE_PATH, true, true);
+        $object = $this->object;
+        $options = [
+            xPDOTransport::PACKAGE_ACTION => xPDOTransport::ACTION_INSTALL,
+        ];
         foreach ($resolversBefore as $resolver) {
-            $object = $this->object;
-            $options = [
-                xPDOTransport::PACKAGE_ACTION => xPDOTransport::ACTION_INSTALL,
-            ];
             $result = include $resolversDir . $resolver;
             if (!$result) {
                 return $this->failure('Before resolver ' . $resolver . ' failure!');
@@ -82,7 +82,7 @@ class GitPackageManagementRunResolversProcessor extends modObjectProcessor {
                 return $this->failure('After resolver ' . $resolver . ' failure!');
             }
         }
-        return $this->success();
+        return $this->success('Package resolver finshed!');
     }
 }
 return 'GitPackageManagementRunResolversProcessor';
