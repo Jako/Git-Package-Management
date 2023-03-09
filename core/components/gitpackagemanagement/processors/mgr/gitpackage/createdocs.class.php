@@ -138,8 +138,9 @@ class GitPackageManagementCreateDocsProcessor extends modObjectProcessor
          $snippets = $this->config->getElements('snippets');
          foreach ($snippets as $snippet) {
              $this->modx->lexicon->load($this->config->getLowCaseName() . ':properties');
-             $properties = [];
-             foreach ($snippet->getProperties() as $property) {
+             $values = [];
+             $properties = $snippet->getProperties();
+             foreach ($properties as $property) {
                  switch ($property['type']) {
                      case 'textfield':
                      default:
@@ -149,21 +150,22 @@ class GitPackageManagementCreateDocsProcessor extends modObjectProcessor
                          $default = ($property['value'] == '1') ? '1 (' . $this->modx->lexicon('yes') . ')' : '0 (' . $this->modx->lexicon('no') . ')';
                          break;
                  }
-                 $properties[] = [
+                 $values[$property['name']] = [
                      'name' => $property['name'],
                      'description' => $this->convertLinks($this->escapeTable($this->modx->lexicon($this->config->getLowCaseName() . '.' . strtolower($snippet->getName()) . '.' . $property['name']))),
                      'default' => $default,
                  ];
              }
 
+             ksort($values);
              $result = [
                  '## ' . $snippet->getName(),
                  '',
                  '| Property | Description | Default |',
                  '|----------|-------------|---------|'
              ];
-             foreach ($properties as $property) {
-                 $result[] = '| ' . $property['name'] . ' | ' . $property['description'] . ' | ' . $property['default'] . ' |';
+             foreach ($values as $value) {
+                 $result[] = '| ' . $value['name'] . ' | ' . $value['description'] . ' | ' . $value['default'] . ' |';
              }
 
              if (!file_exists($this->docsPath)) {
