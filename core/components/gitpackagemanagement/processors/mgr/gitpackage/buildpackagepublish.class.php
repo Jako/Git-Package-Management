@@ -22,6 +22,8 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
     /** @var Packeteer $packeteer */
     public $packeteer;
 
+    private $phpVersion = '7.4.33';
+
     public function process()
     {
         $corePath = $this->modx->getOption('packeteer.core_path', null, $this->modx->getOption('core_path') . 'components/packeteer/');
@@ -56,7 +58,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $execVal = 0;
         $execResult = array();
         if (file_exists($this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/composer.json')) {
-            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php7.4.26/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer install --prefer-dist --no-dev --no-progress --optimize-autoloader --working-dir=' . $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/' . ' 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php' . $this->phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer install --prefer-dist --no-dev --no-progress --optimize-autoloader --working-dir=' . $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/' . ' 2>&1', $execResult, $execVal);
             $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Running composer for ' . $this->config->getName() . ' ' . $this->config->getVersion() . "\n" . implode("\n", $execResult));
             if ($execVal != 0) {
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Composer issue!');
@@ -68,7 +70,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $execVal = 0;
         $execResult = array();
         if (file_exists($this->config->getPackagePath() . '/test/phpunit.xml')) {
-            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php7.4.26/bin; /usr/local/bin/phpunit --configuration ' . $this->config->getPackagePath() . '/test/phpunit.xml 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php' . $this->phpVersion . '/bin; /usr/local/bin/phpunit --configuration ' . $this->config->getPackagePath() . '/test/phpunit.xml 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'phpUnit issue!' . "\n" . implode("\n", $execResult));
                 return $this->failure('phpUnit issue!' . '<br>' . implode('<br>', $execResult));
