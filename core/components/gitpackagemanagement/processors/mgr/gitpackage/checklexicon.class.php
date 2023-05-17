@@ -54,6 +54,10 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
 
         $this->language = $this->modx->getOption('gitpackagemanagement.default_lexicon', null, 'en');
 
+        /** @var modLexicon $lexicon */
+        $lexicon = $this->modx->getService('lexicon', 'modLexicon');
+        $lexicon->clearCache();
+
         return true;
     }
 
