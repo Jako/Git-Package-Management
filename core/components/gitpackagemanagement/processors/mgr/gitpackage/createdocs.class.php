@@ -50,6 +50,8 @@ class GitPackageManagementCreateDocsProcessor extends modObjectProcessor
 
         $this->language = $this->modx->getOption('gitpackagemanagement.default_lexicon', null, 'en');
 
+        $this->modx->lexicon->load($this->language . ':core:default');
+
         return true;
     }
 
@@ -95,25 +97,26 @@ class GitPackageManagementCreateDocsProcessor extends modObjectProcessor
         return $doctypes;
     }
 
-    private function createSettingsDocs() {
+    private function createSettingsDocs()
+    {
         $values = [];
         $settings = $this->config->getSettings();
         ksort($settings);
         foreach ($settings as $setting) {
-            $this->modx->lexicon->load($setting->getNamespace() . ':setting');
+            $this->modx->lexicon->load($this->language . ':' . $setting->getNamespace() . ':setting');
             switch ($setting->getType()) {
                 case 'textfield':
                 default:
                     $default = ($setting->getValue()) ?: '-';
                     break;
                 case 'combo-boolean':
-                    $default = ($setting->getValue() == '1') ? $this->modx->lexicon('yes') : $this->modx->lexicon('no');
+                    $default = ($setting->getValue() == '1') ? $this->modx->lexicon('yes', [], $this->language) : $this->modx->lexicon('no', [], $this->language);
                     break;
             }
             $values[] = [
                 'key' => $setting->getNamespacedKey(),
-                'name' => $this->modx->lexicon('setting_' . $setting->getNamespacedKey()),
-                'description' => $this->convertLinks($this->escapeTable($this->modx->lexicon('setting_' . $setting->getNamespacedKey() . '_desc'))),
+                'name' => $this->modx->lexicon('setting_' . $setting->getNamespacedKey(), [], $this->language),
+                'description' => $this->convertLinks($this->escapeTable($this->modx->lexicon('setting_' . $setting->getNamespacedKey() . '_desc', [], $this->language))),
                 'default' => $default,
             ];
         }
@@ -134,55 +137,58 @@ class GitPackageManagementCreateDocsProcessor extends modObjectProcessor
         return true;
     }
 
-     private function createPropertiesDocs() {
-         $snippets = $this->config->getElements('snippets');
-         foreach ($snippets as $snippet) {
-             $this->modx->lexicon->load($this->config->getLowCaseName() . ':properties');
-             $values = [];
-             $properties = $snippet->getProperties();
-             foreach ($properties as $property) {
-                 switch ($property['type']) {
-                     case 'textfield':
-                     default:
-                         $default = ($property['value']) ?: '-';
-                         break;
-                     case 'combo-boolean':
-                         $default = ($property['value'] == '1') ? '1 (' . $this->modx->lexicon('yes') . ')' : '0 (' . $this->modx->lexicon('no') . ')';
-                         break;
-                 }
-                 $values[$property['name']] = [
-                     'name' => $property['name'],
-                     'description' => $this->convertLinks($this->escapeTable($this->modx->lexicon($this->config->getLowCaseName() . '.' . strtolower($snippet->getName()) . '.' . $property['name']))),
-                     'default' => $default,
-                 ];
-             }
+    private function createPropertiesDocs()
+    {
+        $snippets = $this->config->getElements('snippets');
+        foreach ($snippets as $snippet) {
+            $this->modx->lexicon->load($this->language . ':' . $this->config->getLowCaseName() . ':properties');
+            $values = [];
+            $properties = $snippet->getProperties();
+            foreach ($properties as $property) {
+                switch ($property['type']) {
+                    case 'textfield':
+                    default:
+                        $default = ($property['value']) ?: '-';
+                        break;
+                    case 'combo-boolean':
+                        $default = ($property['value'] == '1') ? '1 (' . $this->modx->lexicon('yes', [], $this->language) . ')' : '0 (' . $this->modx->lexicon('no', [], $this->language) . ')';
+                        break;
+                }
+                $values[$property['name']] = [
+                    'name' => $property['name'],
+                    'description' => $this->convertLinks($this->escapeTable($this->modx->lexicon($this->config->getLowCaseName() . '.' . strtolower($snippet->getName()) . '.' . $property['name'], [], $this->language))),
+                    'default' => $default,
+                ];
+            }
 
-             ksort($values);
-             $result = [
-                 '## ' . $snippet->getName(),
-                 '',
-                 '| Property | Description | Default |',
-                 '|----------|-------------|---------|'
-             ];
-             foreach ($values as $value) {
-                 $result[] = '| ' . $value['name'] . ' | ' . $value['description'] . ' | ' . $value['default'] . ' |';
-             }
+            ksort($values);
+            $result = [
+                '## ' . $snippet->getName(),
+                '',
+                '| Property | Description | Default |',
+                '|----------|-------------|---------|'
+            ];
+            foreach ($values as $value) {
+                $result[] = '| ' . $value['name'] . ' | ' . $value['description'] . ' | ' . $value['default'] . ' |';
+            }
 
-             if (!file_exists($this->docsPath)) {
-                 $this->modx->cacheManager->writeTree($this->docsPath . 'snippets/');
-             }
-             $this->modx->cacheManager->writeFile($this->docsPath . 'snippets/' . $snippet->getName() . '.md', implode("\n", $result));
-         }
-         return true;
+            if (!file_exists($this->docsPath)) {
+                $this->modx->cacheManager->writeTree($this->docsPath . 'snippets/');
+            }
+            $this->modx->cacheManager->writeFile($this->docsPath . 'snippets/' . $snippet->getName() . '.md', implode("\n", $result));
+        }
+        return true;
     }
 
-    private function convertLinks($string) {
+    private function convertLinks($string)
+    {
         $search = '#(<a .*?href=")(.*?)(".*?>)(.*?)(</a>)#';
         $replace = '[$4]($2)';
         return preg_replace($search, $replace, $string);
     }
 
-    private function escapeTable($string) {
+    private function escapeTable($string)
+    {
         return str_replace('|', '&#124;', $string);
     }
 }
