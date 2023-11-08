@@ -61,6 +61,32 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $execVal = 0;
         $execResult = array();
         if (file_exists($this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/composer.json')) {
+            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php' . $phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer licenses --format=json --working-dir=' . $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/' . ' 2>&1', $execResult, $execVal);
+            if ($execVal != 0) {
+                $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Composer issue!');
+                return $this->failure('Composer issue!' . '<br>' . implode('<br>', $execResult));
+            } else {
+                $result = json_decode(implode('', $execResult), true);
+                $dependencies = $result['dependencies'] ?? [];
+                $packages = [];
+                foreach ($dependencies as $name => $info) {
+                    $packages[] = '*' . $name . '@' . ($info['version'] ?? 'unknown') . ' [' . ($info['license'][0] ?? 'unknown') . ']';
+                }
+            }
+            $packages = implode("\n", $packages);
+
+            if ($packages) {
+                $packages = "## Third party licenses\n\nThis extra includes third party software, for which we are thankful.\n\n" . $packages;
+                $filename = $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/docs/readme.md';
+                $content = file_get_contents($filename);
+                if ($content && strpos($content, '## Third party licenses')) {
+                    $content = preg_replace('/## Third party licenses.*$/s', $packages, $content);
+                } else {
+                    $content = $content . "\n\n" . $packages;
+                }
+                file_put_contents($filename, $content);
+            }
+
             exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php' . $phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer install --prefer-dist --no-dev --no-progress --optimize-autoloader --working-dir=' . $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/' . ' 2>&1', $execResult, $execVal);
             $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Running composer for ' . $this->config->getName() . ' ' . $this->config->getVersion() . "\n" . implode("\n", $execResult));
             if ($execVal != 0) {
