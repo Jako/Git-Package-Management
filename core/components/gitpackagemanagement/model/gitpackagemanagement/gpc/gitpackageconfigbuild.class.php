@@ -136,7 +136,7 @@ class GitPackageConfigBuild {
      * @param string $changeLog
      */
     public function setChangeLog($changeLog) {
-        $this->changeLog = $changeLog;
+        $this->changelog = $changeLog;
     }
 
     /**
