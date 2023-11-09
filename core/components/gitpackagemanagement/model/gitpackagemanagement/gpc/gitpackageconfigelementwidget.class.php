@@ -6,6 +6,7 @@ class GitPackageConfigElementWidget extends GitPackageConfigElement{
     protected $widgettype = '';
     protected $lexicon = '';
     protected $size = '';
+    protected $namespace;
 
     public function fromArray($config) {
         if(isset($config['name'])){
