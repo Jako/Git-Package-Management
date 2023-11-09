@@ -16,6 +16,8 @@ class GitPackageManagementControllerRequest extends modRequest {
     public $actionVar = 'action';
     public $defaultAction = 'home';
 
+    private $action;
+
     function __construct(GitPackageManagement &$GitPackageManagement) {
         parent :: __construct($GitPackageManagement->modx);
         $this->GitPackageManagement =& $GitPackageManagement;

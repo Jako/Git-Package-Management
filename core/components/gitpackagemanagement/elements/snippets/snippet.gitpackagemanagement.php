@@ -26,7 +26,7 @@ $items = $modx->getCollection('GitPackageManagementItem',$c);
 $list = array();
 foreach ($items as $item) {
     $itemArray = $item->toArray();
-    $list[] = $GitPackageManagement->getChunk($tpl,$itemArray);
+    $list[] = $modx->getChunk($tpl,$itemArray);
 }
 
 /* output */
