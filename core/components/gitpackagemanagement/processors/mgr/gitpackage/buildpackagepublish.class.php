@@ -70,7 +70,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 $dependencies = $result['dependencies'] ?? [];
                 $packages = [];
                 foreach ($dependencies as $name => $info) {
-                    $packages[] = '*' . $name . '@' . ($info['version'] ?? 'unknown') . ' [' . ($info['license'][0] ?? 'unknown') . ']';
+                    $packages[] = '* ' . $name . '@' . ($info['version'] ?? 'unknown') . ' [' . ($info['license'][0] ?? 'unknown') . ']';
                 }
             }
             $packages = implode("\n", $packages);
