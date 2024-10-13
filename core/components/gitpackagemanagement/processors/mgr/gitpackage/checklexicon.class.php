@@ -144,7 +144,7 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
                 return false;
             }
             if ($current->isDir()) {
-                return ($current->getFilename() !== '_packages' && $current->getFilename() !== 'node_modules' && $current->getFilename() !== 'vendor');
+                return ($current->getFilename() !== '_packages' && $current->getFilename() !== 'node_modules' && $current->getFilename() !== 'vendor' && $current->getFilename() !== 'site');
             } else {
                 $pathinfo = pathinfo($current->getFilename());
                 return ($current->isFile() && (
