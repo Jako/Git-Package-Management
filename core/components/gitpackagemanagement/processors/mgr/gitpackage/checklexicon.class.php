@@ -81,13 +81,16 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
         $this->superfluousKeys = array_diff(array_keys($lexiconEntries), $usedKeys);
 
         $msg = array();
-        if ($result = $this->writeKeys('missing')) {
+        $result = $this->writeKeys('missing');
+        if ($result) {
             $msg[] = $result;
         }
-        if ($result = $this->writeKeys('superfluous')) {
+        $result = $this->writeKeys('superfluous');
+        if ($result) {
             $msg[] = $result;
         }
-        if ($result = $this->writeKeys('variable')) {
+        $result = $this->writeKeys('variable');
+        if ($result) {
             $msg[] = $result;
         }
         if (empty($msg)) {
