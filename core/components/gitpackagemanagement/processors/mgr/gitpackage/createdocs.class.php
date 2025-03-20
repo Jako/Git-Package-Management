@@ -1,5 +1,5 @@
 <?php
-require_once dirname(dirname(dirname(dirname(__FILE__)))) . '/model/gitpackagemanagement/gpc/gitpackageconfig.class.php';
+require_once dirname(__FILE__, 4) . '/model/gitpackagemanagement/gpc/gitpackageconfig.class.php';
 
 /**
  * Check lexicon in git repository and collect missing/superfluous entries
@@ -27,7 +27,7 @@ class GitPackageManagementCreateDocsProcessor extends modObjectProcessor
         $this->object = $this->modx->getObject('GitPackage', array('id' => $id));
         if (!$this->object) return $this->failure();
 
-        $this->packagePath = rtrim($this->modx->getOption('gitpackagemanagement.packages_dir', null, null), '/') . '/';
+        $this->packagePath = rtrim($this->modx->getOption('gitpackagemanagement.packages_dir'), '/') . '/';
         if ($this->packagePath == null) {
             return $this->modx->lexicon('gitpackagemanagement.package_err_ns_packages_dir');
         }
@@ -44,13 +44,15 @@ class GitPackageManagementCreateDocsProcessor extends modObjectProcessor
         $config = $this->modx->fromJSON($config);
 
         $this->config = new GitPackageConfig($this->modx, $packagePath);
-        if ($this->config->parseConfig($config) == false) {
+        if (!$this->config->parseConfig($config)) {
             return $this->modx->lexicon('gitpackagemanagement.package_err_url_config_nf');
         }
 
         $this->language = $this->modx->getOption('gitpackagemanagement.default_lexicon', null, 'en');
 
-        $this->modx->lexicon->load($this->language . ':core:default');
+        /** @var modLexicon $lexicon */
+        $lexicon = $this->modx->getService('lexicon', 'modLexicon');
+        $lexicon->load($this->language . ':core:default');
 
         return true;
     }
@@ -72,7 +74,7 @@ class GitPackageManagementCreateDocsProcessor extends modObjectProcessor
 
     private function setPaths()
     {
-        $packagesPath = rtrim($this->modx->getOption('gitpackagemanagement.packages_dir', null, null), '/') . '/';
+        $packagesPath = rtrim($this->modx->getOption('gitpackagemanagement.packages_dir'), '/') . '/';
 
         $this->packagePath = $packagesPath . $this->object->dir_name . "/";
         $this->packagePath = str_replace('\\', '/', $this->packagePath);

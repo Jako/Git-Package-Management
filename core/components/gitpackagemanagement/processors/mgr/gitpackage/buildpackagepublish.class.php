@@ -56,7 +56,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         }
 
         try {
-            $this->prepareUpload();
+            $this->createUpload();
         } catch (Exception $e) {
             return $this->failure($e->getMessage());
         }
@@ -198,7 +198,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
      * @return void
      * @throws Exception
      */
-    private function prepareUpload(): void
+    private function createUpload(): void
     {
         $source = $this->config->getPackagePath() . '/_packages/' . $this->builder->getTPBuilder()->getSignature() . '.transport.zip';
         chmod($source, 0666);

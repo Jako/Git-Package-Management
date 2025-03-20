@@ -1,12 +1,14 @@
 <?php
-require_once dirname(dirname(dirname(dirname(__FILE__)))) . '/model/gitpackagemanagement/gpc/gitpackageconfig.class.php';
+require_once dirname(__FILE__, 4) . '/model/gitpackagemanagement/gpc/gitpackageconfig.class.php';
+
 /**
  * Check lexicon in git repository and collect missing/superfluous entries
  *
  * @package gitpackagemanagement
  * @subpackage processors
  */
-class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
+class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor
+{
     /** @var GitPackage $object */
     public $object;
     /** @var GitPackageConfig $config */
@@ -24,14 +26,15 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
 
     private $invalidLexicons = array();
 
-    public function prepare(){
+    public function prepare()
+    {
         $id = $this->getProperty('id');
         if ($id == null) return $this->failure();
 
         $this->object = $this->modx->getObject('GitPackage', array('id' => $id));
         if (!$this->object) return $this->failure();
 
-        $this->packagePath = rtrim($this->modx->getOption('gitpackagemanagement.packages_dir', null, null), '/') . '/';
+        $this->packagePath = rtrim($this->modx->getOption('gitpackagemanagement.packages_dir'), '/') . '/';
         if ($this->packagePath == null) {
             return $this->modx->lexicon('gitpackagemanagement.package_err_ns_packages_dir');
         }
@@ -48,7 +51,7 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
         $config = $this->modx->fromJSON($config);
 
         $this->config = new GitPackageConfig($this->modx, $packagePath);
-        if ($this->config->parseConfig($config) == false) {
+        if (!$this->config->parseConfig($config)) {
             return $this->modx->lexicon('gitpackagemanagement.package_err_url_config_nf');
         }
 
@@ -61,7 +64,8 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
         return true;
     }
 
-    public function process() {
+    public function process()
+    {
         $prepare = $this->prepare();
         if ($prepare !== true) {
             return $prepare;
@@ -93,6 +97,9 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
         if ($result) {
             $msg[] = $result;
         }
+        if ($this->invalidLexicons) {
+            $msg[] = 'The following lexicon files are invalid: ' . implode(', ', $this->invalidLexicons);
+        }
         if (empty($msg)) {
             $msg = 'Every lexicon entry is available and no variable keys are used!';
         } else {
@@ -103,8 +110,9 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
     }
 
 
-    private function setPaths() {
-        $packagesPath = rtrim($this->modx->getOption('gitpackagemanagement.packages_dir', null, null), '/') . '/';
+    private function setPaths()
+    {
+        $packagesPath = rtrim($this->modx->getOption('gitpackagemanagement.packages_dir'), '/') . '/';
 
         $this->packagePath = $packagesPath . $this->object->dir_name . "/";
         $this->packagePath = str_replace('\\', '/', $this->packagePath);
@@ -117,10 +125,11 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
      *
      * @return bool|array
      */
-    private function loadLexicons() {
+    private function loadLexicons()
+    {
         if (file_exists($this->lexiconPath . $this->language . '/')) {
             $_lang = array();
-            $iterator = new \DirectoryIterator($this->lexiconPath . $this->language . '/');
+            $iterator = new DirectoryIterator($this->lexiconPath . $this->language . '/');
             foreach ($iterator as $path => $current) {
                 if (strpos($current->getFilename(), 'inc.php') !== false) {
                     try {
@@ -139,10 +148,11 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
     /**
      * Add used lexicon keys
      */
-    private function addKeys() {
-        $directory = new \RecursiveDirectoryIterator($this->packagePath, \RecursiveDirectoryIterator::SKIP_DOTS);
-        $filter = new \RecursiveCallbackFilterIterator($directory, function ($current, $key, $iterator) {
-            /** @var \RecursiveDirectoryIterator $current */
+    private function addKeys()
+    {
+        $directory = new RecursiveDirectoryIterator($this->packagePath, FilesystemIterator::SKIP_DOTS);
+        $filter = new RecursiveCallbackFilterIterator($directory, function ($current) {
+            /** @var RecursiveDirectoryIterator $current */
             if ($current->getFilename()[0] === '.') {
                 return false;
             }
@@ -150,16 +160,16 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
                 return ($current->getFilename() !== '_packages' && $current->getFilename() !== 'node_modules' && $current->getFilename() !== 'vendor' && $current->getFilename() !== 'site');
             } else {
                 $pathinfo = pathinfo($current->getFilename());
-                return ($current->isFile() && (
-                    $pathinfo['extension'] == 'php' ||
-                    $pathinfo['extension'] == 'js' ||
-                    $pathinfo['extension'] == 'html' ||
-                    $pathinfo['extension'] == 'tpl' ||
-                    $pathinfo['basename'] == 'config.json'
-                    ) && strpos($pathinfo['basename'], 'min.js') === false) ? true : false;
+                return $current->isFile() && (
+                        $pathinfo['extension'] == 'php' ||
+                        $pathinfo['extension'] == 'js' ||
+                        $pathinfo['extension'] == 'html' ||
+                        $pathinfo['extension'] == 'tpl' ||
+                        $pathinfo['basename'] == 'config.json'
+                    ) && strpos($pathinfo['basename'], 'min.js') === false;
             }
         });
-        $iterator = new \RecursiveIteratorIterator($filter);
+        $iterator = new RecursiveIteratorIterator($filter);
 
         foreach ($iterator as $path => $current) {
             $this->addPhpKeys($path);
@@ -181,7 +191,8 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
      *
      * @param string $filename
      */
-    private function addPhpKeys($filename) {
+    private function addPhpKeys($filename)
+    {
         $fileContent = file_get_contents($filename);
         $results = array();
         preg_match_all('/(modx|xpdo)->lexicon\((["\'])((perm.)?' . $this->config->getLowCaseName() . '.*?)\2\s*[,)]/m', $fileContent, $results);
@@ -207,10 +218,11 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
      *
      * @param string $filename
      */
-    private function addJsKeys($filename) {
+    private function addJsKeys($filename)
+    {
         $fileContent = file_get_contents($filename);
         $results = array();
-        preg_match_all('/_\(([\'"])(' . $this->config->getLowCaseName() . '.*?)\1\s*[,\)]/m', $fileContent, $results);
+        preg_match_all('/_\(([\'"])(' . $this->config->getLowCaseName() . '.*?)\s*[,)]/m', $fileContent, $results);
         if (is_array($results[2])) {
             foreach ($results[2] as $result) {
                 // Don't add lexicon keys that ends with a dot or an underscore or that key is concatenated
@@ -233,7 +245,8 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
      *
      * @param string $filename
      */
-    private function addChunkKeys($filename) {
+    private function addChunkKeys($filename)
+    {
         $fileContent = file_get_contents($filename);
         $results = array();
         preg_match_all('/\[\[%(' . $this->config->getLowCaseName() . '.*?)[?\]]/m', $fileContent, $results);
@@ -259,10 +272,11 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
      *
      * @param string $filename
      */
-    private function addSmartyKeys($filename) {
+    private function addSmartyKeys($filename)
+    {
         $fileContent = file_get_contents($filename);
         $results = array();
-        preg_match_all('/\$_lang\.(.*?)\}/m', $fileContent, $results);
+        preg_match_all('/\$_lang\.(.*?)}/m', $fileContent, $results);
         if (is_array($results[1])) {
             foreach ($results[1] as $result) {
                 // Don't add lexicon keys that ends with a dot or an underscore or that key contains a setting tag
@@ -278,7 +292,8 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
     /**
      * Add setting language keys
      */
-    private function addSettingKeys() {
+    private function addSettingKeys()
+    {
         $settings = $this->config->getSettings();
 
         foreach ($settings as $setting) {
@@ -296,7 +311,8 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
     /**
      * Add menu language keys
      */
-    private function addMenuKeys() {
+    private function addMenuKeys()
+    {
         $menus = $this->config->getMenus();
 
         foreach ($menus as $menu) {
@@ -308,7 +324,8 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
     /**
      * Add snippet property language keys
      */
-    private function addSnippetKeys() {
+    private function addSnippetKeys()
+    {
         $snippets = $this->config->getElements('snippets');
 
         foreach ($snippets as $snippet) {
@@ -329,7 +346,8 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
     /**
      * Add widget language keys
      */
-    private function addWidgetKeys() {
+    private function addWidgetKeys()
+    {
         $widgets = $this->config->getElements('widgets');
 
         foreach ($widgets as $widget) {
@@ -344,7 +362,8 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
      * @param string $type
      * @return bool|string
      */
-    private function writeKeys($type) {
+    private function writeKeys($type)
+    {
         switch ($type) {
             case 'superfluous':
                 $keys = &$this->superfluousKeys;
@@ -361,11 +380,11 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
                 break;
         }
         if (!empty($keys)) {
-            $handle = fopen($this->lexiconPath . $this->language . '/'. $keysFile, 'w');
+            $handle = fopen($this->lexiconPath . $this->language . '/' . $keysFile, 'w');
             if ($handle) {
                 fwrite($handle, "<?php\n");
                 foreach ($keys as $key) {
-                    fwrite($handle, "\$_lang['{$key}'] = '';\n");
+                    fwrite($handle, "\$_lang['$key'] = '';\n");
                 }
                 fclose($handle);
             } else {
@@ -375,11 +394,12 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor {
             return '<strong>The ' . $type . ' keys:</strong> ' . implode(', ', array_values($keys)) . '<br><br>' .
                 'They could be found in the file <strong>' . $keysFile . '</strong> in the <strong>' . $this->language . '</strong> lexicon.';
         } else {
-            if (file_exists($this->lexiconPath . $this->language . '/'. $keysFile)) {
-                unlink($this->lexiconPath . $this->language . '/'. $keysFile);
+            if (file_exists($this->lexiconPath . $this->language . '/' . $keysFile)) {
+                unlink($this->lexiconPath . $this->language . '/' . $keysFile);
             }
             return false;
         }
     }
 }
+
 return 'GitPackageManagementCheckLexiconProcessor';
