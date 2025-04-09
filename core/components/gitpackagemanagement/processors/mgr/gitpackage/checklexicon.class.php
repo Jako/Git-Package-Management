@@ -222,7 +222,7 @@ class GitPackageManagementCheckLexiconProcessor extends modObjectProcessor
     {
         $fileContent = file_get_contents($filename);
         $results = array();
-        preg_match_all('/_\(([\'"])(' . $this->config->getLowCaseName() . '.*?)\s*[,)]/m', $fileContent, $results);
+        preg_match_all('/_\(([\'"])(' . $this->config->getLowCaseName() . '\..*?)\1/m', $fileContent, $results);
         if (is_array($results[2])) {
             foreach ($results[2] as $result) {
                 // Don't add lexicon keys that ends with a dot or an underscore or that key is concatenated
