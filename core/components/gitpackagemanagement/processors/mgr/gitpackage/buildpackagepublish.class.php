@@ -212,9 +212,9 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             'displayname' => $this->config->getName(),
             'description' => $this->config->getDescription(),
             'author' => $this->config->getAuthor(),
-            'instructions' => utf8_encode($packageAttributes['readme']),
-            'changelog' => utf8_encode($packageAttributes['changelog']),
-            'license' => utf8_encode($packageAttributes['license']),
+            'instructions' => mb_convert_encoding($packageAttributes['readme'], 'UTF-8', 'ISO-8859-1'),
+            'changelog' => mb_convert_encoding($packageAttributes['changelog'], 'UTF-8', 'ISO-8859-1'),
+            'license' => mb_convert_encoding($packageAttributes['license'], 'UTF-8', 'ISO-8859-1'),
             'modx_version' => $this->modx->getOption('modx_version', $buildOptions, $this->packeteer->getOption('minimal_modx_version'))
         );
         $packageInfo = "<?php\n" .
