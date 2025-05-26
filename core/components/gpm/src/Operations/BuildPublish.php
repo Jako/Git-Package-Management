@@ -42,7 +42,6 @@ class BuildPublish extends Build
             $this->phpVersion = $this->getPhpVersion();
 
             $this->scanPacketeerPackages();
-            $this->moveTempComposer();
 
             $this->builder = new modPackageBuilder($this->modx);
 
@@ -74,8 +73,6 @@ class BuildPublish extends Build
             $this->setPackageAttributes();
 
             $this->package->pack();
-
-            $this->moveBackComposer();
 
             $this->createUpload();
 
@@ -196,34 +193,6 @@ class BuildPublish extends Build
             if ($filesExist) {
                 $this->logger->info('Lexicon test files deleted.');
             }
-        }
-    }
-
-    /**
-     * @return void
-     */
-    private function moveTempComposer()
-    {
-        $useComposer = $this->config->build->options['composer'] ?? false;
-        if ($useComposer) {
-            // Don't include the vendor folder in the package
-            $this->vendorPath = $this->config->paths->package . '/core/components/' . $this->config->general->lowCaseName . '/vendor/';
-            $this->tempVendorPath = $this->config->paths->package . '/temp_vendor/';
-            rename($this->vendorPath, $this->tempVendorPath);
-            $this->logger->notice('Temporary move the vendor folder from the package.');
-        }
-    }
-
-    /**
-     * @return void
-     */
-    private function moveBackComposer(): void
-    {
-        $useComposer = $this->config->build->options['composer'] ?? false;
-        if ($useComposer) {
-            // Move the vendor folder back
-            rename($this->tempVendorPath, $this->vendorPath);
-            $this->logger->notice('Move the vendor folder back into the package.');
         }
     }
 

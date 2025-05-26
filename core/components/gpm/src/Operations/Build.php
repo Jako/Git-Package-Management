@@ -210,12 +210,26 @@ class Build extends Operation {
             ];
         }
 
+        // Don't include the vendor folder in the package (thanks @Jako for this part)
+        $vendorPath = $this->config->paths->core . 'vendor/';
+        $tempVendorPath = $this->config->paths->build . '/temp_vendor/';
+        if ($this->config->build->composer) {
+            rename($vendorPath, $tempVendorPath);
+            $this->logger->notice('Temporary move the vendor folder from the package.');
+        }
+
         $this->package->put($namespace, [
             xPDOTransport::UNIQUE_KEY    => 'name',
             xPDOTransport::PRESERVE_KEYS => true,
             xPDOTransport::UPDATE_OBJECT => true,
             'resolve' => $namespaceResolvers
         ]);
+
+        // Restore original vendor folder
+        if ($this->config->build->composer) {
+            rename($tempVendorPath, $vendorPath);
+            $this->logger->notice('Move the vendor folder back into the package.');
+        }
     }
 
     protected function packSystemSettings(): void
