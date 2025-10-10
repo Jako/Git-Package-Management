@@ -128,7 +128,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 file_put_contents($filename, $content);
             }
 
-            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php' . $phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer install --prefer-dist --no-dev --no-progress --optimize-autoloader --working-dir=' . $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/' . ' 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php' . $phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer update --prefer-dist --no-dev --no-progress --optimize-autoloader --lock --working-dir=' . $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/' . ' 2>&1', $execResult, $execVal);
             $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Running composer for ' . $this->config->getName() . ' ' . $this->config->getVersion() . "\n" . implode("\n", $execResult));
             if ($execVal != 0) {
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Composer issue!');
@@ -244,6 +244,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             ));
 
             try {
+                sleep(2);
                 $file = fopen($source, 'r');
                 $filesystem->writeStream(basename($source), $file);
             } catch (FilesystemException|UnableToWriteFile $exception) {
