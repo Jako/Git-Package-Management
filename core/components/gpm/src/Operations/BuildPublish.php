@@ -41,8 +41,6 @@ class BuildPublish extends Build
 
             $this->phpVersion = $this->getPhpVersion();
 
-            $this->scanPacketeerPackages();
-
             $this->builder = new modPackageBuilder($this->modx);
 
             $this->prepareExternalScripts();
@@ -154,7 +152,7 @@ class BuildPublish extends Build
                 file_put_contents($filename, $content);
             }
 
-            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php' . $this->phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer install --prefer-dist --no-dev --no-progress --optimize-autoloader --working-dir=' . $this->config->paths->package . 'core/components/' . $this->config->general->lowCaseName . '/' . ' 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php' . $this->phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer update --prefer-dist --no-dev --no-progress --optimize-autoloader --lock --working-dir=' . $this->config->paths->package . 'core/components/' . $this->config->general->lowCaseName . '/' . ' 2>&1', $execResult, $execVal);
             $this->logger->info('Running composer for ' . $this->config->general->name . ' ' . $this->config->general->version);
             if ($execVal != 0) {
                 $this->logger->error('Composer issue!' . "\n" . implode("\n", $execResult));
