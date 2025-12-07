@@ -85,7 +85,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Grunt issue!' . "\n" . implode("\n", $execResult));
                 throw new Exception('Grunt issue!' . '<br>' . implode('<br>', $execResult));
             }
-            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Grunt successful.');
+            // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Grunt successful.');
         }
 
         $execVal = 0;
@@ -96,7 +96,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Gulp issue!' . "\n" . implode("\n", $execResult));
                 throw new Exception('Gulp issue!' . '<br>' . implode('<br>', $execResult));
             }
-            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Gulp successful.');
+            // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Gulp successful.');
         }
 
         $execVal = 0;
@@ -129,12 +129,12 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             }
 
             exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php' . $phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer update --prefer-dist --no-dev --no-progress --optimize-autoloader --lock --working-dir=' . $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/' . ' 2>&1', $execResult, $execVal);
-            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Running composer for ' . $this->config->getName() . ' ' . $this->config->getVersion() . "\n" . implode("\n", $execResult));
+            // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Running composer for ' . $this->config->getName() . ' ' . $this->config->getVersion() . "\n" . implode("\n", $execResult));
             if ($execVal != 0) {
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Composer issue!');
                 throw new Exception('Composer issue!' . '<br>' . implode('<br>', $execResult));
             }
-            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Composer successful.');
+            // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Composer successful.');
         }
 
         $execVal = 0;
@@ -145,7 +145,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'phpUnit issue!' . "\n" . implode("\n", $execResult));
                 throw new Exception('phpUnit issue!' . '<br>' . implode('<br>', $execResult));
             }
-            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'phpUnit successful.');
+            // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'phpUnit successful.');
         }
     }
 
@@ -160,7 +160,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             $this->vendorPath = $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/vendor/';
             $this->tempVendorPath = $this->config->getPackagePath() . '/temp_vendor/';
             rename($this->vendorPath, $this->tempVendorPath);
-            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Temporary move the vendor folder from the package.');
+            // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Temporary move the vendor folder from the package.');
         }
     }
 
@@ -173,7 +173,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         if ($useComposer) {
             // Move the vendor folder back
             rename($this->tempVendorPath, $this->vendorPath);
-            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Move the vendor folder back into the package.');
+            // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Move the vendor folder back into the package.');
         }
     }
 
@@ -190,7 +190,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                     @unlink($info->getRealPath());
                 }
             }
-            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Lexicon test files deleted.');
+            // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Lexicon test files deleted.');
         }
     }
 
@@ -252,7 +252,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 throw new Exception('SFTP Error uploading package: ' . $exception->getMessage());
             }
 
-            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Upload the package per FTP to the package provider.');
+            // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Upload the package per FTP to the package provider.');
 
             $package_info = $this->config->getPackagePath() . '/_packages/' . $this->builder->getTPBuilder()->package->name . '.info.php';
             $info_file = fopen($package_info, 'w');
@@ -268,7 +268,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 throw new Exception('SFTP Error uploading package info: ' . $exception->getMessage());
             }
 
-            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Upload the package info per FTP to the package provider.');
+            // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Upload the package info per FTP to the package provider.');
         } else {
             $targetPath = realpath(MODX_BASE_PATH . $this->packeteer->getOption('site_extras_path'));
             $target = $targetPath . '/_packages/' . $this->builder->getTPBuilder()->getSignature() . '.transport.zip';
@@ -281,7 +281,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             fwrite($info_file, $packageInfo);
             fclose($info_file);
             chmod($package_info, 0666);
-            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Update the package info file.');
+            // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Update the package info file.');
         }
     }
 
@@ -302,14 +302,14 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_SSL_VERIFYPEER => 0
         ));
-        $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Before Scan package.');
+        // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Before Scan package.');
         $result = curl_exec($ch);
-        $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Scan package: ' . $result);
+        // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Scan package: ' . $result);
         $result = json_decode($result, true);
         if ($result == null) {
             $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'cURL Error scan package: ' . curl_error($ch));
         } else {
-            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Scan for the package on the package provider.');
+            // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Scan for the package on the package provider.');
         }
         curl_close($ch);
         return $result;
