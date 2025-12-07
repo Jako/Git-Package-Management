@@ -73,7 +73,7 @@ class CreateDocs extends Operation
             ];
         }
         if ($values) {
-            ksort($values, SORT_STRING);
+            ksort($values, SORT_NATURAL | SORT_FLAG_CASE);
             $result = [
                 '| Key | Name | Description | Default |',
                 '|-----|------|-------------|---------|'
@@ -113,7 +113,7 @@ class CreateDocs extends Operation
                 ];
             }
 
-            ksort($values, SORT_STRING);
+            ksort($values, SORT_NATURAL | SORT_FLAG_CASE);
             $result = [
                 '## ' . $snippet->name,
                 '',
