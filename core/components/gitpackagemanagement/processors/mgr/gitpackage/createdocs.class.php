@@ -103,7 +103,7 @@ class GitPackageManagementCreateDocsProcessor extends modObjectProcessor
     {
         $values = [];
         $settings = $this->config->getSettings();
-        ksort($settings);
+        ksort($settings, SORT_NATURAL | SORT_FLAG_CASE);
         foreach ($settings as $setting) {
             $this->modx->lexicon->load($this->language . ':' . $setting->getNamespace() . ':setting');
             switch ($setting->getType()) {
@@ -163,7 +163,7 @@ class GitPackageManagementCreateDocsProcessor extends modObjectProcessor
                 ];
             }
 
-            ksort($values);
+            ksort($values, SORT_NATURAL | SORT_FLAG_CASE);
             $result = [
                 '## ' . $snippet->getName(),
                 '',
