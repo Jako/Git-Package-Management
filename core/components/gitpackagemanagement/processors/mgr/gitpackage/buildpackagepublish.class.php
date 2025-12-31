@@ -76,11 +76,12 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
     private function prepareExternalScripts($buildOptions)
     {
         $phpVersion = $this->modx->getOption('php_version', $buildOptions, $this->phpVersion);
+        $nodePath = $this->packeteer->getOption('node_path');
 
         $execVal = 0;
         $execResult = array();
         if (file_exists($this->config->getPackagePath() . '/Gruntfile.js')) {
-            exec('export PATH=$PATH:/usr/local/bin; /usr/local/bin/grunt --gruntfile=' . $this->config->getPackagePath() . '/Gruntfile.js default 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:' . $nodePath . '; ' . $nodePath . 'grunt --gruntfile=' . $this->config->getPackagePath() . '/Gruntfile.js default 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Grunt issue!' . "\n" . implode("\n", $execResult));
                 throw new Exception('Grunt issue!' . '<br>' . implode('<br>', $execResult));
@@ -91,7 +92,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $execVal = 0;
         $execResult = array();
         if (file_exists($this->config->getPackagePath() . '/gulpfile.js')) {
-            exec('export PATH=$PATH:/usr/local/bin; /usr/local/bin/gulp --gulpfile=' . $this->config->getPackagePath() . '/gulpfile.js default 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:' . $nodePath . '; ' . $nodePath . 'gulp --gulpfile=' . $this->config->getPackagePath() . '/gulpfile.js default 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Gulp issue!' . "\n" . implode("\n", $execResult));
                 throw new Exception('Gulp issue!' . '<br>' . implode('<br>', $execResult));
@@ -102,7 +103,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $execVal = 0;
         $execResult = array();
         if (file_exists($this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/composer.json')) {
-            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php' . $phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer licenses --format=json --working-dir=' . $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/' . ' 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:/Applications/MAMP/bin/php/php' . $phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer licenses --format=json --working-dir=' . $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/' . ' 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Composer issue!');
                 throw new Exception('Composer issue!' . '<br>' . implode('<br>', $execResult));
@@ -128,7 +129,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
                 file_put_contents($filename, $content);
             }
 
-            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php' . $phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer update --prefer-dist --no-dev --no-progress --optimize-autoloader --lock --working-dir=' . $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/' . ' 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:/Applications/MAMP/bin/php/php' . $phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer update --prefer-dist --no-dev --no-progress --optimize-autoloader --lock --working-dir=' . $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/' . ' 2>&1', $execResult, $execVal);
             // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Running composer for ' . $this->config->getName() . ' ' . $this->config->getVersion() . "\n" . implode("\n", $execResult));
             if ($execVal != 0) {
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Composer issue!');
@@ -140,7 +141,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
         $execVal = 0;
         $execResult = array();
         if (file_exists($this->config->getPackagePath() . '/test/phpunit.xml')) {
-            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php' . $phpVersion . '/bin; /usr/local/bin/phpunit --configuration ' . $this->config->getPackagePath() . '/test/phpunit.xml 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:/Applications/MAMP/bin/php/php' . $phpVersion . '/bin; /usr/local/bin/phpunit --configuration ' . $this->config->getPackagePath() . '/test/phpunit.xml 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
                 $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'phpUnit issue!' . "\n" . implode("\n", $execResult));
                 throw new Exception('phpUnit issue!' . '<br>' . implode('<br>', $execResult));
