@@ -75,7 +75,7 @@ class BuildPublish extends Build
             $this->createUpload();
 
             $this->scanPacketeerPackages();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->error($e->getMessage());
             return;
         }
@@ -101,10 +101,12 @@ class BuildPublish extends Build
      */
     private function prepareExternalScripts()
     {
+        $nodePath = $this->packeteer->getOption('node_path');
+
         $execVal = 0;
         $execResult = array();
         if (file_exists($this->config->paths->package . 'Gruntfile.js')) {
-            exec('export PATH=$PATH:/usr/local/bin; /usr/local/bin/grunt --gruntfile=' . $this->config->paths->package . 'Gruntfile.js default 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:' . $nodePath . '; ' . $nodePath . 'grunt --gruntfile=' . $this->config->paths->package . 'Gruntfile.js default 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
                 $this->logger->error('Grunt issue!' . "\n" . implode("\n", $execResult));
                 throw new Exception('Package not built.');
@@ -115,7 +117,7 @@ class BuildPublish extends Build
         $execVal = 0;
         $execResult = array();
         if (file_exists($this->config->paths->package . 'gulpfile.js')) {
-            exec('export PATH=$PATH:/usr/local/bin; /usr/local/bin/gulp --gulpfile=' . $this->config->paths->package . 'gulpfile.js default 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:' . $nodePath . '; ' . $nodePath . 'gulp --gulpfile=' . $this->config->paths->package . 'gulpfile.js default 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
                 $this->logger->error('Gulp issue!' . "\n" . implode("\n", $execResult));
                 throw new Exception('Package not built.');
@@ -126,7 +128,7 @@ class BuildPublish extends Build
         $execVal = 0;
         $execResult = array();
         if (file_exists($this->config->paths->package . 'core/components/' . $this->config->general->lowCaseName . '/composer.json')) {
-            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php' . $this->phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer licenses --format=json --working-dir=' . $this->config->paths->package . 'core/components/' . $this->config->general->lowCaseName . '/' . ' 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:/Applications/MAMP/bin/php/php' . $this->phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer licenses --format=json --working-dir=' . $this->config->paths->package . 'core/components/' . $this->config->general->lowCaseName . '/' . ' 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
                 $this->logger->error('Composer issue!');
                 throw new Exception('Composer issue!' . '<br>' . implode('<br>', $execResult));
@@ -152,7 +154,7 @@ class BuildPublish extends Build
                 file_put_contents($filename, $content);
             }
 
-            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php' . $this->phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer update --prefer-dist --no-dev --no-progress --optimize-autoloader --lock --working-dir=' . $this->config->paths->package . 'core/components/' . $this->config->general->lowCaseName . '/' . ' 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:/Applications/MAMP/bin/php/php' . $this->phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer update --prefer-dist --no-dev --no-progress --optimize-autoloader --lock --working-dir=' . $this->config->paths->package . 'core/components/' . $this->config->general->lowCaseName . '/' . ' 2>&1', $execResult, $execVal);
             $this->logger->info('Running composer for ' . $this->config->general->name . ' ' . $this->config->general->version);
             if ($execVal != 0) {
                 $this->logger->error('Composer issue!' . "\n" . implode("\n", $execResult));
@@ -164,7 +166,7 @@ class BuildPublish extends Build
         $execVal = 0;
         $execResult = array();
         if (file_exists($this->config->paths->package . 'test/phpunit.xml')) {
-            exec('export PATH=$PATH:/usr/local/bin:/Applications/MAMP/bin/php/php' . $this->phpVersion . '/bin; /usr/local/bin/phpunit --configuration ' . $this->config->paths->package . 'test/phpunit.xml 2>&1', $execResult, $execVal);
+            exec('export PATH=$PATH:/Applications/MAMP/bin/php/php' . $this->phpVersion . '/bin; /usr/local/bin/phpunit --configuration ' . $this->config->paths->package . 'test/phpunit.xml 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
                 $this->logger->error('phpUnit issue!' . "\n" . implode("\n", $execResult));
                 throw new Exception('Package not built.');
@@ -173,16 +175,13 @@ class BuildPublish extends Build
         }
     }
 
-    /**
-     * @return mixed
-     */
     private function cleanupLexicons()
     {
         $lexiconPath = $this->config->paths->package . '/core/components/' . $this->config->general->lowCaseName . '/lexicon/';
         if (file_exists($lexiconPath)) {
             $lexiconPathIterator = new RecursiveDirectoryIterator($lexiconPath, FilesystemIterator::SKIP_DOTS);
             $filesExist = false;
-            foreach (new RecursiveIteratorIterator($lexiconPathIterator, RecursiveIteratorIterator::SELF_FIRST, RecursiveIteratorIterator::CATCH_GET_CHILD) as $file => $info) {
+            foreach (new RecursiveIteratorIterator($lexiconPathIterator, RecursiveIteratorIterator::SELF_FIRST, RecursiveIteratorIterator::CATCH_GET_CHILD) as $info) {
                 if (in_array($info->getFilename(), array('_variable.php', '_missing.php', '_superfluous.php'))) {
                     @unlink($info->getRealPath());
                     $filesExist = true;
@@ -304,7 +303,7 @@ class BuildPublish extends Build
     }
 
     /**
-     * @return mixed
+     * @throws Exception
      */
     private function scanPacketeerPackages()
     {
@@ -333,6 +332,5 @@ class BuildPublish extends Build
         }
 
         curl_close($ch);
-        return $result;
     }
 }
