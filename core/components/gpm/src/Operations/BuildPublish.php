@@ -271,7 +271,7 @@ class BuildPublish extends Build
 
             $this->logger->notice('Upload the package per FTP to the package provider.');
 
-            $package_info = $this->config->paths->package . '/_packages/' . $this->config->general->name . '.info.php';
+            $package_info = $this->config->paths->package . '/_packages/' . $this->config->general->lowCaseName . '.info.php';
             $info_file = fopen($package_info, 'w');
             fwrite($info_file, $packageInfo);
             fclose($info_file);
