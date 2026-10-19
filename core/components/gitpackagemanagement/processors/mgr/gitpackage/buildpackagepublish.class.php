@@ -25,7 +25,7 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
     private $vendorPath;
     private $tempVendorPath;
 
-    private $phpVersion = '7.4.33';
+    private $phpVersion = '8.2.30';
 
     public function process()
     {
