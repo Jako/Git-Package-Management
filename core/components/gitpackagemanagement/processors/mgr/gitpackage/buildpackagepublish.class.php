@@ -102,6 +102,17 @@ class GitPackageManagementBuildPackagePublishProcessor extends GitPackageManagem
 
         $execVal = 0;
         $execResult = array();
+        if (file_exists($this->config->getPackagePath() . '/build.js')) {
+            exec('export PATH=$PATH:' . $nodePath . '; cd ' . $this->config->getPackagePath() . '/ && ' . $nodePath . 'node build.js default 2>&1', $execResult, $execVal);
+            if ($execVal != 0) {
+                $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Node issue!' . "\n" . implode("\n", $execResult));
+                throw new Exception('Gulp issue!' . '<br>' . implode('<br>', $execResult));
+            }
+            // $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Node build successful.');
+        }
+
+        $execVal = 0;
+        $execResult = array();
         if (file_exists($this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/composer.json')) {
             exec('export PATH=$PATH:/Applications/MAMP/bin/php/php' . $phpVersion . '/bin; export COMPOSER_HOME=/Applications/MAMP/bin/php/composer; /Applications/MAMP/bin/php/composer licenses --format=json --working-dir=' . $this->config->getPackagePath() . '/core/components/' . $this->config->getLowCaseName() . '/' . ' 2>&1', $execResult, $execVal);
             if ($execVal != 0) {
