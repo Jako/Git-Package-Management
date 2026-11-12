@@ -38,6 +38,7 @@ $parseSchema = $modx->services->get(\GPM\Operations\ParseSchema::class);
 $install = $modx->services->get(\GPM\Operations\Install::class);
 $update = $modx->services->get(\GPM\Operations\Update::class);
 $build = $modx->services->get(\GPM\Operations\Build::class);
+$buildPublish = $modx->services->get(\GPM\Operations\BuildPublish::class);
 $remove = $modx->services->get(\GPM\Operations\Remove::class);
 $create = $modx->services->get(\GPM\Operations\Create::class);
 
@@ -81,6 +82,7 @@ foreach ($packages as $package) {
     $application->add(new \GPM\CLI\Update("{$package->dir_name}:update", $package, $update));
     $application->add(new \GPM\CLI\ParseSchema("{$package->dir_name}:schema", $package, $parseSchema));
     $application->add(new \GPM\CLI\Build("{$package->dir_name}:build", $package, $build));
+    $application->add(new \GPM\CLI\BuildPublish("{$package->dir_name}:build:publish", $package, $buildPublish));
     $application->add(new \GPM\CLI\Remove("{$package->dir_name}:remove", $package, $remove));
     $application->add(new \GPM\CLI\KeyAdd("{$package->dir_name}:key:add", $package, $keyAdd));
     $application->add(new \GPM\CLI\KeyList("{$package->dir_name}:key:list", $package, $keyList));
