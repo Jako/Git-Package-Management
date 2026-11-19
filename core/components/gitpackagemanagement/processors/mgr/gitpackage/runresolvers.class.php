@@ -67,8 +67,16 @@ class GitPackageManagementRunResolversProcessor extends modObjectProcessor {
 
         $this->modx->loadClass('transport.xPDOTransport', XPDO_CORE_PATH, true, true);
         $object = $this->object;
+        // The resolvers of a transport package get the transport package and its namespace,
+        // so provide them like during the installation of the package
+        $version = explode('-', $this->config->getVersion());
+        $transport = new xPDOTransport($this->modx, $this->config->getLowCaseName() . '-' . $version[0] . '-' . ($version[1] ?? 'pl'), $this->config->getPackagePath(), [
+            xPDOTransport::PACKAGE_NAME => $this->config->getLowCaseName(),
+            xPDOTransport::PACKAGE_VERSION => $version[0] . '-' . ($version[1] ?? 'pl'),
+        ]);
         $options = [
             xPDOTransport::PACKAGE_ACTION => xPDOTransport::ACTION_INSTALL,
+            'namespace' => $this->config->getLowCaseName(),
         ];
         foreach ($resolversBefore as $resolver) {
             $result = include $resolversDir . $resolver;
