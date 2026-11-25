@@ -236,7 +236,7 @@ class BuildPublish extends Build
             'modx_version' => $this->config->build->__get('requires')['modx'] ?? $this->packeteer->getOption('minimal_modx_version')
         );
         $packageInfo = "<?php\n" .
-            'return json_decode(\'' . json_encode($packageInfoArray, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) . '\', true);' . "\n";
+            'return ' . var_export($packageInfoArray, true) . ";\n";
 
         if ($this->packeteer->getOption('sftp_user')) {
 
